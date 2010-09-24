@@ -270,6 +270,16 @@ status_t StringPool::writeStringBlock(const sp<AaptFile>& pool)
 
             ENCODE_LENGTH(strings, sizeof(uint16_t), strSize)
 
+#if BYTE_ORDER != DEVICE_BYTE_ORDER
+	    // ENCODE_LENGTH encodes using host-endian shorts,
+	    // we need to fix it up...
+	    uint16_t *lenp = strings;
+	    while (lenp != (uint16_t*)dat) {
+	        --lenp;
+		*lenp = htods(*lenp);
+	    }
+#endif
+
             strcpy16_htod(strings, ent.value);
         }
 
