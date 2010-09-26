@@ -2592,7 +2592,7 @@ nope:
                                          i, ei, dtohl(entry->key.index)));
                 if (dtohl(entry->key.index) == (size_t)ei) {
                     if (outTypeSpecFlags) {
-                        *outTypeSpecFlags = typeConfigs->typeSpecFlags[i];
+                        *outTypeSpecFlags = dtohl(typeConfigs->typeSpecFlags[i]);
                     }
                     return Res_MAKEID(group->id-1, ti, i);
                 }
