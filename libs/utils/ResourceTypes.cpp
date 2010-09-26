@@ -3901,7 +3901,7 @@ status_t ResTable::parsePackage(const ResTable_package* const pkg,
     const ResChunk_header* chunk =
         (const ResChunk_header*)(((const uint8_t*)pkg)
                                  + dtohs(pkg->header.headerSize));
-    const uint8_t* endPos = ((const uint8_t*)pkg) + dtohs(pkg->header.size);
+    const uint8_t* endPos = ((const uint8_t*)pkg) + dtohl(pkg->header.size);
     while (((const uint8_t*)chunk) <= (endPos-sizeof(ResChunk_header)) &&
            ((const uint8_t*)chunk) <= (endPos-dtohl(chunk->size))) {
         TABLE_NOISY(LOGV("PackageChunk: type=0x%x, headerSize=0x%x, size=0x%x, pos=%p\n",
