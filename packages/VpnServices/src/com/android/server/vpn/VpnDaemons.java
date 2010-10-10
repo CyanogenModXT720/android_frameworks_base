@@ -60,14 +60,14 @@ class VpnDaemons implements Serializable {
     public DaemonProxy startIpsecForL2tp(String serverIp, String pskKey)
             throws IOException {
         DaemonProxy ipsec = startDaemon(IPSEC);
-        ipsec.sendCommand(serverIp, L2TP_PORT, pskKey);
+        ipsec.sendCommand("psk", serverIp, L2TP_PORT, pskKey);
         return ipsec;
     }
 
     public DaemonProxy startIpsecForL2tp(String serverIp, String userKeyKey,
             String userCertKey, String caCertKey) throws IOException {
         DaemonProxy ipsec = startDaemon(IPSEC);
-        ipsec.sendCommand(serverIp, L2TP_PORT, userKeyKey, userCertKey,
+        ipsec.sendCommand("rsa", serverIp, L2TP_PORT, userKeyKey, userCertKey,
                 caCertKey);
         return ipsec;
     }
