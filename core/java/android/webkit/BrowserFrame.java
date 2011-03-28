@@ -37,6 +37,7 @@ import android.util.TypedValue;
 import android.view.Surface;
 import android.view.ViewRoot;
 import android.view.WindowManager;
+import android.webkit.CacheManager.CacheResult;
 
 import junit.framework.Assert;
 
@@ -736,6 +737,40 @@ class BrowserFrame extends Handler {
                     + method + ", postData=" + postData + ", isMainFramePage="
                     + isMainFramePage + ", mainResource=" + mainResource
                     + ", userGesture=" + userGesture);
+        }
+
+      if(SystemProperties.BROWSER_TIOPT) {
+           if(mainResource && (url != null)){
+               String databaseKey = (postDataIdentifier == 0)? url : (postDataIdentifier + url) ;
+               CacheResult result = mDatabase.getCache(databaseKey);
+                if(result != null) {
+                    String HEADER_KEY_IFMODIFIEDSINCE = "if-modified-since";
+                    String HEADER_KEY_IFNONEMATCH = "if-none-match";
+
+                    // return HEADER_KEY_IFNONEMATCH or HEADER_KEY_IFMODIFIEDSINCE
+                    // for requesting validation
+                    if (result.etag != null) {
+                        headers.put(HEADER_KEY_IFNONEMATCH, result.etag);
+                        if (DebugFlags.BROWSER_FRAME) {
+                            Log.v(LOGTAG, "result.etag is not null for url " + url);
+                         }
+                     }
+
+                     if (result.lastModified != null) {
+                         headers.put(HEADER_KEY_IFMODIFIEDSINCE, result.lastModified);
+                         if (DebugFlags.BROWSER_FRAME) {
+                             Log.v(LOGTAG, "result.lastModified is not null for url " + url);
+                          }
+                     }
+
+                     //if (result.expires != null) {
+                         //headers.put(HEADER_KEY_IFMODIFIEDSINCE, result.lastModified);
+                         //if (DebugFlags.CACHE_MANAGER) {
+                         //  Log.v(LOGTAG, "result.lastModified is not null for url " + url);
+                         // }
+                     //}
+                    }
+               }
         }
 
         // Create a LoadListener
