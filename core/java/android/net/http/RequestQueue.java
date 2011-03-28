@@ -66,8 +66,20 @@ public class RequestQueue implements RequestFeeder {
     private HttpHost mProxyHost = null;
     private BroadcastReceiver mProxyChangeReceiver;
 
-    /* default simultaneous connection count */
-    private static final int CONNECTION_COUNT = SystemProperties.getInt("http.threads", 4);
+     /* default simultaneous connection count */
+    private static final int CONNECTION_COUNT;
+
+     static {
+        if( SystemProperties.BROWSER_TIOPT){
+            CONNECTION_COUNT = Integer.parseInt( SystemProperties.get("connection.concurrent", "10"));
+        } else {
+            CONNECTION_COUNT = SystemProperties.getInt("http.threads", 4);
+        }
+
+        if (HttpLog.LOGV){
+            HttpLog.v("Connection Count "+ CONNECTION_COUNT +"Browser Optimization "+SystemProperties.BROWSER_TIOPT);
+        }
+    }
 
     /**
      * This class maintains active connection threads
@@ -76,14 +88,20 @@ public class RequestQueue implements RequestFeeder {
         /** Threads used to process requests */
         ConnectionThread[] mThreads;
 
-        IdleCache mIdleCache;
+        AbstractIdleCache mAbstractIdleCache;
 
         private int mTotalRequest;
         private int mTotalConnection;
         private int mConnectionCount;
 
         ActivePool(int connectionCount) {
-            mIdleCache = new IdleCache();
+
+            if(SystemProperties.BROWSER_TIOPT) {
+                mAbstractIdleCache = new IdleCacheTIOpt();
+            } else {
+                mAbstractIdleCache = new IdleCache();
+            }
+
             mConnectionCount = connectionCount;
             mThreads = new ConnectionThread[mConnectionCount];
 
@@ -156,7 +174,7 @@ public class RequestQueue implements RequestFeeder {
                 Connection connection = mThreads[i].mConnection;
                 if (connection != null) connection.setCanPersist(false);
             }
-            mIdleCache.clear();
+            mAbstractIdleCache.clear();
         }
 
         /* Linear lookup -- okay for small thread counts.  Might use
@@ -177,16 +195,25 @@ public class RequestQueue implements RequestFeeder {
 
         public Connection getConnection(Context context, HttpHost host) {
             host = RequestQueue.this.determineHost(host);
-            Connection con = mIdleCache.getConnection(host);
-            if (con == null) {
-                mTotalConnection++;
-                con = Connection.getConnection(mContext, host, mProxyHost,
-                        RequestQueue.this);
-            }
-            return con;
+             Connection con = null;
+             {
+                 if (HttpLog.LOGV)   HttpLog.v("Searching for cached http connection");
+                 con = mAbstractIdleCache.getConnection(host);
+             }
+             if (con == null) {
+                 mTotalConnection++;
+                 if (HttpLog.LOGV)   HttpLog.v("New Cnxn: mTotalConnection"+mTotalConnection);
+                 con = Connection.getConnection(mContext, host, mProxyHost,
+                 RequestQueue.this);
+             }
+             else{
+                 if (HttpLog.LOGV)  HttpLog.v("Loading Cached Cnxn");
+             }
+             return con;
         }
+
         public boolean recycleConnection(Connection connection) {
-            return mIdleCache.cacheConnection(connection.getHost(), connection);
+            return mAbstractIdleCache.cacheConnection(connection.getHost(), connection);
         }
 
     }
@@ -215,6 +242,8 @@ public class RequestQueue implements RequestFeeder {
      * @param connectionCount The number of simultaneous connections 
      */
     public RequestQueue(Context context, int connectionCount) {
+        if (HttpLog.LOGV) HttpLog.v("RequestQueue(Context, int)"+connectionCount+"read"+CONNECTION_COUNT);
+
         mContext = context;
 
         mPending = new LinkedHashMap<HttpHost, LinkedList<Request>>(32);

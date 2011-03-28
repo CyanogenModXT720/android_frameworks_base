@@ -30,6 +30,8 @@ public class SystemProperties
     public static final int PROP_VALUE_MAX = 91;
     public static final boolean OMAP_ENHANCEMENT = native_get_boolean("com.ti.omap_enhancement", false);
     public static final boolean HAVE_HDMI = native_get_boolean("com.ti.have_hdmi", false);
+    //Check for TI browser optmization
+    public static final boolean BROWSER_TIOPT =  Boolean.parseBoolean(SystemProperties.get("browser.tioptimization", "false"));
 
     private static native String native_get(String key);
     private static native String native_get(String key, String def);

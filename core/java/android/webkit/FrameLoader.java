@@ -16,6 +16,8 @@
 
 package android.webkit;
 
+import android.os.SystemProperties;
+
 import android.net.http.EventHandler;
 import android.net.http.RequestHandle;
 import android.util.Log;
@@ -94,6 +96,11 @@ class FrameLoader {
      */
     public boolean executeLoad() {
         String url = mListener.url();
+        if(SystemProperties.BROWSER_TIOPT) {
+                if (DebugFlags.FRAME_LOADER) {
+                    Log.v(LOGTAG, "FrameLoader::executeLoad");
+                }
+        }
 
         if (URLUtil.isNetworkUrl(url)){
             if (mSettings.getBlockNetworkLoads()) {
@@ -226,7 +233,7 @@ class FrameLoader {
         }
 
         if (DebugFlags.FRAME_LOADER) {
-            Log.v(LOGTAG, "FrameLoader: http " + mMethod + " load for: "
+            Log.v(LOGTAG, "FrameLoader::handleHTTPLoad http " + mMethod + " load for: "
                     + mListener.url());
         }
 
@@ -279,6 +286,13 @@ class FrameLoader {
      * Returns true if the response was handled from the cache
      */
     private boolean handleCache() {
+        if(SystemProperties.BROWSER_TIOPT){
+                if (DebugFlags.FRAME_LOADER) {
+                            Log.v(LOGTAG, "FrameLoader: handleCache: "
+                                    + mListener.url() + "mCacheMode= " + mCacheMode);
+               }
+        }
+
         switch (mCacheMode) {
             // This mode is normally used for a reload, it instructs the http
             // loader to not use the cached content.

@@ -792,6 +792,12 @@ class LoadListener extends Handler implements EventHandler {
                 mFromCache = true;
                 return true;
             }
+           else {
+                 if (DebugFlags.LOAD_LISTENER) {
+                        Log.v(LOGTAG, "FrameLoader: HTTP URL is not in cache " +
+                            "and NOT usable: " + url());
+                }
+            }
         }
         return false;
     }

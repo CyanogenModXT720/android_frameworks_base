@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2008 The Android Open Source Project
- * Copyright (C) 2011, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,29 +22,44 @@ package android.net.http;
 
 import org.apache.http.HttpHost;
 
+import java.util.LinkedList;
+
 import android.os.SystemClock;
-import android.os.SystemProperties;
 
 /**
  * {@hide}
  */
-class IdleCache extends AbstractIdleCache {
+class IdleCacheTIOpt extends AbstractIdleCache{
 
     class Entry {
         HttpHost mHost;
         Connection mConnection;
         long mTimeout;
+
+        Entry(HttpHost host, Connection connection, long timeout){
+            mHost = host;
+            mConnection = connection;
+            mTimeout = timeout;
+        }
     };
 
-    private final static int IDLE_CACHE_MAX = SystemProperties.getInt("http.idle_cache.size", 8);
+    private LinkedList<Entry> lstEntry = new LinkedList<Entry>();
 
-    /* Allow five consecutive empty queue checks before shutdown */
-    private final static int EMPTY_CHECK_MAX = 5;
+    /*It is recommened to set it twice the CONNECTION_COUNT defined in
+    RequestQueue.java. This way you can effectively use the cache (more hits and less misses).
+    Since its changed to linked list, this is the upper bound on the link list size.
+    */
+    private final static int IDLE_CACHE_MAX = 100;
+
+    /* Allow three consecutive empty queue checks before shutdown */
+    private final static int EMPTY_CHECK_MAX = 2;
 
     /* six second timeout for connections */
     private final static int TIMEOUT = 6 * 1000;
-    private final static int CHECK_INTERVAL = 2 * 1000;
-    private Entry[] mEntries = new Entry[IDLE_CACHE_MAX];
+    /*Changed from 2 sec, since the connection timeout is 6 sec. No point in waking
+    up IdleReaper thread so often. Only issue is for EMPTY_CHECK_MAX which may be delayed
+    from 5*2(=10sec) to 5*5(=25 sec). So reducing EMPTY_CHECK_MAX to 2*/
+    private final static int CHECK_INTERVAL = 5 * 1000;
 
     private int mCount = 0;
 
@@ -55,10 +69,7 @@ class IdleCache extends AbstractIdleCache {
     private int mCached = 0;
     private int mReused = 0;
 
-    IdleCache() {
-        for (int i = 0; i < IDLE_CACHE_MAX; i++) {
-            mEntries[i] = new Entry();
-        }
+    IdleCacheTIOpt() {
     }
 
     /**
@@ -71,26 +82,24 @@ class IdleCache extends AbstractIdleCache {
         boolean ret = false;
 
         if (HttpLog.LOGV) {
-            HttpLog.v("IdleCache size " + mCount + " host "  + host);
+            HttpLog.v("IdleCacheTIOpt size " + mCount + " host "  + host + "list size" + lstEntry.size());
         }
 
         if (mCount < IDLE_CACHE_MAX) {
             long time = SystemClock.uptimeMillis();
-            for (int i = 0; i < IDLE_CACHE_MAX; i++) {
-                Entry entry = mEntries[i];
-                if (entry.mHost == null) {
-                    entry.mHost = host;
-                    entry.mConnection = connection;
-                    entry.mTimeout = time + TIMEOUT;
-                    mCount++;
-                    if (HttpLog.LOGV) mCached++;
-                    ret = true;
-                    if (mThread == null) {
-                        mThread = new IdleReaper();
-                        mThread.start();
-                    }
-                    break;
-                }
+            lstEntry.addLast(new Entry(host, connection, time+TIMEOUT));
+
+            mCount++;
+
+            if (HttpLog.LOGV){
+                mCached++;
+                HttpLog.v("Cached Cnxn Increment" + mCount + "list size" + lstEntry.size());
+            }
+
+            ret = true;
+            if (mThread == null) {
+                mThread = new IdleReaper();
+                mThread.start();
             }
         }
         return ret;
@@ -98,32 +107,37 @@ class IdleCache extends AbstractIdleCache {
 
     synchronized Connection getConnection(HttpHost host) {
         Connection ret = null;
-
+        /**
+        * Reuse the cached connection only after establishing
+        *more http connection with server.
+        */
         if (mCount > 0) {
-            for (int i = 0; i < IDLE_CACHE_MAX; i++) {
-                Entry entry = mEntries[i];
+            for(int i=0; i< lstEntry.size(); i++){
+                Entry entry = lstEntry.get(i);
                 HttpHost eHost = entry.mHost;
-                if (eHost != null && eHost.equals(host)) {
+                if (eHost.equals(host)) {
                     ret = entry.mConnection;
-                    entry.mHost = null;
-                    entry.mConnection = null;
+                    lstEntry.remove(i);
                     mCount--;
-                    if (HttpLog.LOGV) mReused++;
+                    if (HttpLog.LOGV){
+                        mReused++;
+                        HttpLog.v("Cached Cnxn Decrement" + mCount + "list size" + lstEntry.size());
+                    }
                     break;
-                }
+               }
             }
         }
         return ret;
     }
 
     synchronized void clear() {
-        for (int i = 0; mCount > 0 && i < IDLE_CACHE_MAX; i++) {
-            Entry entry = mEntries[i];
+        for (int i = 0; mCount > 0 && i < lstEntry.size(); i++) {
+            Entry entry = lstEntry.get(i);
             if (entry.mHost != null) {
-                entry.mHost = null;
                 entry.mConnection.closeConnection();
-                entry.mConnection = null;
+                lstEntry.remove(i);
                 mCount--;
+                if (HttpLog.LOGV) HttpLog.v("ClearCached Cnxn Decrement" + mCount + "list size" + lstEntry.size());
             }
         }
     }
@@ -131,13 +145,13 @@ class IdleCache extends AbstractIdleCache {
     private synchronized void clearIdle() {
         if (mCount > 0) {
             long time = SystemClock.uptimeMillis();
-            for (int i = 0; i < IDLE_CACHE_MAX; i++) {
-                Entry entry = mEntries[i];
-                if (entry.mHost != null && time > entry.mTimeout) {
-                    entry.mHost = null;
+            for (int i = 0; i < lstEntry.size(); i++) {
+                Entry entry = lstEntry.get(i);
+                if (time > entry.mTimeout) {
                     entry.mConnection.closeConnection();
-                    entry.mConnection = null;
+                    lstEntry.remove(i);
                     mCount--;
+                    if (HttpLog.LOGV) HttpLog.v("ClearIdleCached Cnxn Decrement" + mCount + "list size" + lstEntry.size());
                 }
             }
         }
@@ -151,10 +165,10 @@ class IdleCache extends AbstractIdleCache {
             setName("IdleReaper");
             android.os.Process.setThreadPriority(
                     android.os.Process.THREAD_PRIORITY_BACKGROUND);
-            synchronized (IdleCache.this) {
+            synchronized (IdleCacheTIOpt.this) {
                 while (check < EMPTY_CHECK_MAX) {
                     try {
-                        IdleCache.this.wait(CHECK_INTERVAL);
+                        IdleCacheTIOpt.this.wait(CHECK_INTERVAL);
                     } catch (InterruptedException ex) {
                     }
                     if (mCount == 0) {
@@ -167,7 +181,7 @@ class IdleCache extends AbstractIdleCache {
                 mThread = null;
             }
             if (HttpLog.LOGV) {
-                HttpLog.v("IdleCache IdleReaper shutdown: cached " + mCached +
+                HttpLog.v("IdleCacheTIOpt IdleReaper shutdown: cached " + mCached +
                           " reused " + mReused);
                 mCached = 0;
                 mReused = 0;

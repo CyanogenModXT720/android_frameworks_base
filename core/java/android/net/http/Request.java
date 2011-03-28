@@ -124,6 +124,10 @@ class Request {
         mBodyLength = bodyLength;
         mPriority = pri;
 
+        if (HttpLog.LOGV) {
+            HttpLog.v("Request.Request() in Request.java ");
+        }
+
         if (bodyProvider == null && !"POST".equalsIgnoreCase(method)) {
             mHttpRequest = new BasicHttpRequest(method, getUri());
         } else {
@@ -215,14 +219,15 @@ class Request {
 
         if (HttpLog.LOGV) {
             HttpLog.v("Request.sendRequest() " + mHost.getSchemeName() + "://" + getHostPort());
-            // HttpLog.v(mHttpRequest.getRequestLine().toString());
-            if (false) {
+            HttpLog.v("RequestLine2String  " + mHttpRequest.getRequestLine().toString());
+
+             /*if (HttpLog.LOGV) {
                 Iterator i = mHttpRequest.headerIterator();
                 while (i.hasNext()) {
                     Header header = (Header)i.next();
-                    HttpLog.v(header.getName() + ": " + header.getValue());
+                    HttpLog.v("Send Request" + header.getName() + ": " + header.getValue());
                 }
-            }
+            }*/
         }
 
         requestContentProcessor.process(mHttpRequest,
