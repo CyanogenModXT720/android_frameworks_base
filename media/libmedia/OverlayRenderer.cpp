@@ -95,7 +95,7 @@ int32_t OverlayRenderer::createOverlayRenderer(uint32_t bufferCount,
     mColorFormat = colorFormat;
     mDecodedWidth = decodedWidth;
     mDecodedHeight = decodedHeight;
-    mInfoType = infoType;
+    mInfoType = infoType; //currently it is being used to set mSurfaceControl->setLayer().
     //Keep in mind that info ptr is NOT passed across in BpOverlayRenderer
 
     mInitCheck = NO_INIT;
@@ -134,6 +134,18 @@ void OverlayRenderer::releaseMe()
     //delete this;
 
     LOG_FUNCTION_NAME_ENTRY
+
+    sp<IMemory> mem;
+    unsigned int sz = mOverlayAddresses.size();
+
+    for (size_t i = 0; i < sz; ++i) {
+        mem = mOverlayAddresses[i];
+        mem.clear();
+        //dispose the memory allocated on heap explicitly
+        (mVideoHeaps[i].get())->dispose();
+        mVideoHeaps[i].clear();
+    }
+    mOverlayAddresses.clear();
 
     if ( NULL != mOverlay.get() ) {
         mOverlay->destroy();
@@ -251,7 +263,8 @@ int32_t OverlayRenderer::createSurface()
 
         /* Configuring the surface */
         mSurfaceClient->openTransaction();
-        mSurfaceControl->setLayer(100000);
+        mSurfaceControl->setLayer(mInfoType);
+        //mSurfaceControl->setLayer(100000);
         //mSurfaceControl->setLayer(0x40000000);set in BootAnimation.cpp
         mSurfaceClient->closeTransaction();
 
