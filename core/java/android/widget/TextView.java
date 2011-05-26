@@ -8028,6 +8028,14 @@ public class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             }
         };
 
+        ViewTreeObserver.OnPreDrawListener mPreDrawListener=new ViewTreeObserver.OnPreDrawListener() {
+			@Override
+			public boolean onPreDraw() {
+		    	updateCursorControllerPositions();
+				return true;
+			}
+		};
+        
         InsertionPointCursorController() {
             mHandle = new HandleView(this, HandleView.CENTER);
         }
@@ -8036,11 +8044,15 @@ public class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             updatePosition();
             mHandle.show();
             hideDelayed(DELAY_BEFORE_FADE_OUT);
+            ViewTreeObserver vto=TextView.this.getViewTreeObserver();
+            vto.addOnPreDrawListener(mPreDrawListener);
         }
 
         public void hide() {
             mHandle.hide();
             removeCallbacks(mHider);
+            ViewTreeObserver vto=TextView.this.getViewTreeObserver();
+            vto.removeOnPreDrawListener(mPreDrawListener);
         }
 
         private void hideDelayed(int msec) {
@@ -8103,7 +8115,13 @@ public class TextView extends View implements ViewTreeObserver.OnPreDrawListener
         private long mPreviousTapUpTime = 0;
         private int mPreviousTapPositionX;
         private int mPreviousTapPositionY;
-
+        ViewTreeObserver.OnPreDrawListener mPreDrawListener=new ViewTreeObserver.OnPreDrawListener() {
+			@Override
+			public boolean onPreDraw() {
+		    	updateCursorControllerPositions();
+				return true;
+			}
+		};
         SelectionModifierCursorController() {
             mStartHandle = new HandleView(this, HandleView.LEFT);
             mEndHandle = new HandleView(this, HandleView.RIGHT);
@@ -8120,12 +8138,16 @@ public class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             mStartHandle.show();
             mEndHandle.show();
             hideInsertionPointCursorController();
+            ViewTreeObserver vto=TextView.this.getViewTreeObserver();
+            vto.addOnPreDrawListener(mPreDrawListener);
         }
 
         public void hide() {
             mStartHandle.hide();
             mEndHandle.hide();
             mIsShowing = false;
+            ViewTreeObserver vto=TextView.this.getViewTreeObserver();
+            vto.removeOnPreDrawListener(mPreDrawListener);
         }
 
         public boolean isShowing() {
