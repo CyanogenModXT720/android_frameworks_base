@@ -1934,6 +1934,17 @@ public class StatusBarService extends IStatusBar.Stub
         }
     };
 
+   private View.OnLongClickListener mPowerLongListener = new View.OnLongClickListener() {
+       public boolean onLongClick(View v) {
+           LinearLayout layout = (LinearLayout)v;
+           String type = (String)layout.getTag();
+           PowerButton btn = mUsedPowerButtons.get(type);
+           deactivate();
+           btn.callSettings(mContext);
+           return true;
+       }
+   };
+
     private void setupPowerWidget() {
         LinearLayout layout;
         String lists = Settings.System.getString(mContext.getContentResolver(),
@@ -1952,6 +1963,7 @@ public class StatusBarService extends IStatusBar.Stub
             layout.setVisibility(View.VISIBLE);
             layout.setTag(list.get(posi));
             layout.setOnClickListener(mPowerListener);
+            layout.setOnLongClickListener(mPowerLongListener);
             setupWidget(buttonType, posi + 1);
         }
         updateWidget();
