@@ -61,6 +61,14 @@ public:
         ACCESS_BUFFER,
     } AccessMode;
 
+    enum {
+        /* data larger than this does not get uncompressed into a buffer */
+#ifdef HAVE_ANDROID_OS
+        UNCOMPRESS_DATA_MAX = 1 * 1024 * 1024
+#else
+        UNCOMPRESS_DATA_MAX = 2 * 1024 * 1024
+#endif
+    };
     /*
      * Read data from the current offset.  Returns the actual number of
      * bytes read, 0 on EOF, or -1 on error.

@@ -61,6 +61,7 @@ public:
     static bool isSameSurface(
             const sp<SurfaceControl>& lhs, const sp<SurfaceControl>& rhs);
         
+    SurfaceID   ID() const      { return mToken; }
     uint32_t    getFlags() const { return mFlags; }
     uint32_t    getIdentity() const { return mIdentity; }
 
@@ -154,7 +155,10 @@ public:
         return (surface != 0) && surface->isValid();
     }
 
+    static bool isSameSurface(
+            const sp<Surface>& lhs, const sp<Surface>& rhs);
     bool        isValid();
+    SurfaceID   ID() const          { return mToken; }
     uint32_t    getFlags() const    { return mFlags; }
     uint32_t    getIdentity() const { return mIdentity; }
 
@@ -166,12 +170,17 @@ public:
     // setSwapRectangle() is intended to be used by GL ES clients
     void        setSwapRectangle(const Rect& r);
 
-
 private:
-    /*
-     * Android frameworks friends
-     * (eventually this should go away and be replaced by proper APIs)
-     */
+    // can't be copied
+    Surface& operator = (Surface& rhs);
+    Surface(const Surface& rhs);
+
+    Surface(const sp<SurfaceControl>& control);
+    void init();
+     ~Surface();
+  
+    friend class SurfaceComposerClient;
+    friend class SurfaceControl;
     // camera and camcorder need access to the ISurface binder interface for preview
     friend class Camera;
     friend class MediaRecorder;
@@ -193,6 +202,8 @@ private:
     Surface(const Parcel& data, const sp<IBinder>& ref);
     ~Surface();
 
+    inline const GraphicBufferMapper& getBufferMapper() const { return mBufferMapper; }
+    inline GraphicBufferMapper& getBufferMapper() { return mBufferMapper; }
 
     /*
      *  ANativeWindow hooks
@@ -212,6 +223,7 @@ private:
     int query(int what, int* value);
     int perform(int operation, va_list args);
 
+    status_t dequeueBuffer(sp<GraphicBuffer>* buffer);
     void dispatch_setUsage(va_list args);
     int  dispatch_connect(va_list args);
     int  dispatch_disconnect(va_list args);
@@ -274,12 +286,16 @@ private:
     SharedBufferClient*         mSharedBufferClient;
     status_t                    mInitCheck;
     sp<ISurface>                mSurface;
+    SurfaceID                   mToken;
     uint32_t                    mIdentity;
     PixelFormat                 mFormat;
     uint32_t                    mFlags;
+    GraphicBufferMapper&        mBufferMapper;
+    SharedBufferClient*         mSharedBufferClient;
 
     // protected by mSurfaceLock
     Rect                        mSwapRectangle;
+    uint32_t                    mUsage;
     int                         mConnected;
     Rect                        mNextBufferCrop;
     uint32_t                    mNextBufferTransform;
@@ -287,6 +303,7 @@ private:
     
     // protected by mSurfaceLock. These are also used from lock/unlock
     // but in that case, they must be called form the same thread.
+    sp<GraphicBuffer>           mBuffers[2];
     mutable Region              mDirtyRegion;
 
     // must be used from the lock/unlock thread
@@ -294,6 +311,7 @@ private:
     sp<GraphicBuffer>           mPostedBuffer;
     mutable Region              mOldDirtyRegion;
     bool                        mReserved;
+    bool                        mNeedFullUpdate;
 
     // only used from dequeueBuffer()
     Vector< sp<GraphicBuffer> > mBuffers;

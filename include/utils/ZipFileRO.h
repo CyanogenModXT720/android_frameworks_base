@@ -75,7 +75,13 @@ public:
           mHashTableSize(-1), mHashTable(NULL)
         {}
 
-    ~ZipFileRO();
+    ~ZipFileRO() {
+        free(mHashTable);
+        if (mFileMap)
+            mFileMap->release();
+        if (mFd >= 0)
+            close(mFd);
+    }
 
     /*
      * Open an archive.

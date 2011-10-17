@@ -71,6 +71,9 @@ public:
     // Return the connection of this client
     sp<IBinder> connection() const;
     
+    // Retrieve a client for an existing connection.
+    static sp<SurfaceComposerClient>
+                clientForConnection(const sp<IBinder>& conn);
     // Forcibly remove connection before all references have gone away.
     void        dispose();
 
@@ -150,9 +153,16 @@ public:
     status_t    setMatrix(SurfaceID id, float dsdx, float dtdx, float dsdy, float dtdy);
     status_t    setPosition(SurfaceID id, int32_t x, int32_t y);
     status_t    setSize(SurfaceID id, uint32_t w, uint32_t h);
+    void        signalServer();
     status_t    destroySurface(SurfaceID sid);
 
 private:
+    friend class Surface;
+    friend class SurfaceControl;
+    void        _init(const sp<ISurfaceComposer>& sm,
+                    const sp<ISurfaceFlingerClient>& conn);    
+    SurfaceComposerClient(const sp<ISurfaceComposer>& sm, 
+            const sp<IBinder>& conn);
     virtual void onFirstRef();
     inline layer_state_t*   get_state_l(SurfaceID id);
     layer_state_t*          lockLayerState(SurfaceID id);
@@ -166,6 +176,9 @@ private:
                 // these don't need to be protected because they never change
                 // after assignment
                 status_t                    mStatus;
+                SharedClient*               mControl;
+                sp<IMemoryHeap>             mControlMemory;
+                sp<ISurfaceFlingerClient>   mClient;
                 sp<ISurfaceComposerClient>  mClient;
 };
 
