@@ -758,7 +758,7 @@ public class LockPatternUtils {
                 boolean allDay      = cursor.getInt(4) != 0;
                 StringBuilder sb = new StringBuilder();
                 if (allDay == true) {
-                    SimpleDateFormat sdf = new SimpleDateFormat(mContext.getString(R.string.abbrev_wday_month_day_no_year));
+                    SimpleDateFormat sdf = new SimpleDateFormat(mContext.getString(R.string.abbrev_wday_month_day_year)); //show the year, it is good for me, and also there is no need to edit menay files to compile
                     // Calendar stores all-day events in UTC -- setting the timezone ensures
                     // the correct date is shown.
                     sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
