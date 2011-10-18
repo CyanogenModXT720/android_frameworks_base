@@ -159,8 +159,8 @@ public:
 private:
     friend class Surface;
     friend class SurfaceControl;
-    void        _init(const sp<ISurfaceComposer>& sm,
-                    const sp<ISurfaceFlingerClient>& conn);    
+//    void        _init(const sp<ISurfaceComposer>& sm,
+//                    const sp<ISurfaceFlingerClient>& conn);    
     SurfaceComposerClient(const sp<ISurfaceComposer>& sm, 
             const sp<IBinder>& conn);
     virtual void onFirstRef();
@@ -178,7 +178,7 @@ private:
                 status_t                    mStatus;
                 SharedClient*               mControl;
                 sp<IMemoryHeap>             mControlMemory;
-                sp<ISurfaceFlingerClient>   mClient;
+                //sp<ISurfaceFlingerClient>   mClient;
                 sp<ISurfaceComposerClient>  mClient;
 };
 

@@ -27,7 +27,7 @@
 namespace android {
 
 class AudioRecord;
-
+struct MediaBufferGroup;
 struct AudioSource : public MediaSource, public MediaBufferObserver {
     // Note that the "channels" parameter is _not_ the number of channels,
     // but a bitmask of AudioSystem::audio_channels constants.
@@ -83,6 +83,7 @@ private:
     int64_t mInitialReadTimeUs;
     int64_t mNumFramesReceived;
     int64_t mNumClientOwnedBuffers;
+    MediaBufferGroup *mGroup;
 
     List<MediaBuffer * > mBuffersReceived;
 

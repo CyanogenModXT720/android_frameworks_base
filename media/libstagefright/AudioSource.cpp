@@ -26,7 +26,7 @@
 #include <media/stagefright/MediaBuffer.h>
 #include <media/stagefright/MediaDefs.h>
 #include <media/stagefright/MetaData.h>
-#include <media/stagefright/foundation/ADebug.h>
+//#include <media/stagefright/foundation/ADebug.h>
 #include <cutils/properties.h>
 #include <stdlib.h>
 
@@ -51,11 +51,14 @@ static void AudioRecordCallbackFunction(int event, void *user, void *info) {
 AudioSource::AudioSource(
         int inputSource, uint32_t sampleRate, uint32_t channels)
     : mStarted(false),
+      mCollectStats(false),
       mSampleRate(sampleRate),
       mPrevSampleTimeUs(0),
+      mTotalLostFrames(0),
+      mPrevLostBytes(0),
       mNumFramesReceived(0),
-      mNumClientOwnedBuffers(0) {
-
+      mGroup(NULL), 
+      mNumClientOwnedBuffers(0){ 
     LOGV("sampleRate: %d, channels: %d", sampleRate, channels);
     CHECK(channels == 1 || channels == 2);
     uint32_t flags = AudioRecord::RECORD_AGC_ENABLE |

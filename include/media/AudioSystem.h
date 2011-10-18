@@ -161,6 +161,7 @@ public:
         MODE_IN_CALL,
 //#if defined(MOT_FEAT_ENABLE_FM_RADIO)
         MODE_FM,
+	MODE_IN_COMMUNICATION, //becouse is called in legacy hardware
 //#endif
         NUM_MODES  // not a valid entry, denotes end-of-list
     };
