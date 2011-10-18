@@ -376,6 +376,93 @@ status_t AudioSource::read(
     return OK;
 }
 
+
+void AudioSource::signalBufferReturned(MediaBuffer *buffer) {
+    LOGV("signalBufferReturned: %p", buffer->data());
+    Mutex::Autolock autoLock(mLock);
+    --mNumClientOwnedBuffers;
+    buffer->setObserver(0);
+    buffer->release();
+    mFrameEncodingCompletionCondition.signal();
+    return;
+}
+
+
+status_t AudioSource::dataCallbackTimestamp(
+        const AudioRecord::Buffer& audioBuffer, int64_t timeUs) {
+    LOGV("dataCallbackTimestamp: %lld us", timeUs);
+    Mutex::Autolock autoLock(mLock);
+    if (!mStarted) {
+        LOGW("Spurious callback from AudioRecord. Drop the audio data.");
+        return OK;
+    }
+
+    // Drop retrieved and previously lost audio data.
+    if (mNumFramesReceived == 0 && timeUs < mStartTimeUs) {
+        mRecord->getInputFramesLost();
+        LOGV("Drop audio data at %lld/%lld us", timeUs, mStartTimeUs);
+        return OK;
+    }
+
+    if (mNumFramesReceived == 0 && mPrevSampleTimeUs == 0) {
+        mInitialReadTimeUs = timeUs;
+        // Initial delay
+        if (mStartTimeUs > 0) {
+            mStartTimeUs = timeUs - mStartTimeUs;
+        } else {
+            // Assume latency is constant.
+            mStartTimeUs += mRecord->latency() * 1000;
+        }
+        mPrevSampleTimeUs = mStartTimeUs;
+    }
+
+    int64_t timestampUs = mPrevSampleTimeUs;
+
+    size_t numLostBytes = 0;
+    if (mNumFramesReceived > 0) {  // Ignore earlier frame lost
+        // getInputFramesLost() returns the number of lost frames.
+        // Convert number of frames lost to number of bytes lost.
+        numLostBytes = mRecord->getInputFramesLost() * mRecord->frameSize();
+    }
+
+    CHECK_EQ(numLostBytes & 1, 0u);
+    CHECK_EQ(audioBuffer.size & 1, 0u);
+    size_t bufferSize = numLostBytes + audioBuffer.size;
+    MediaBuffer *buffer = new MediaBuffer(bufferSize);
+    if (numLostBytes > 0) {
+        memset(buffer->data(), 0, numLostBytes);
+        memcpy((uint8_t *) buffer->data() + numLostBytes,
+                    audioBuffer.i16, audioBuffer.size);
+    } else {
+        if (audioBuffer.size == 0) {
+            LOGW("Nothing is available from AudioRecord callback buffer");
+            buffer->release();
+            return OK;
+        }
+        memcpy((uint8_t *) buffer->data(),
+                audioBuffer.i16, audioBuffer.size);
+    }
+
+
+    buffer->set_range(0, bufferSize);
+    timestampUs += ((1000000LL * (bufferSize >> 1)) +
+                    (mSampleRate >> 1)) / mSampleRate;
+
+    if (mNumFramesReceived == 0) {
+        buffer->meta_data()->setInt64(kKeyAnchorTime, mStartTimeUs);
+    }
+    buffer->meta_data()->setInt64(kKeyTime, mPrevSampleTimeUs);
+    buffer->meta_data()->setInt64(kKeyDriftTime, timeUs - mInitialReadTimeUs);
+    mPrevSampleTimeUs = timestampUs;
+    mNumFramesReceived += buffer->range_length() / sizeof(int16_t);
+    mBuffersReceived.push_back(buffer);
+    mFrameAvailableCondition.signal();
+
+    return OK;
+}
+
+
+
 void AudioSource::trackMaxAmplitude(int16_t *data, int nSamples) {
     for (int i = nSamples; i > 0; --i) {
         int16_t value = *data++;
