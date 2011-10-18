@@ -638,7 +638,7 @@ class LockScreen extends LinearLayout implements KeyguardScreen, KeyguardUpdateM
     }
 
     private void centerWidgets() {
-        if (mWidgetLayout == 2) {
+        if (mWidgetLayout == 2 && mCreationOrientation != Configuration.ORIENTATION_LANDSCAPE) {
             RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams)
             mCarrier.getLayoutParams();
             layoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT;
@@ -862,12 +862,14 @@ class LockScreen extends LinearLayout implements KeyguardScreen, KeyguardUpdateM
 
     private void refreshAlarmDisplay() {
         mNextAlarm = mLockPatternUtils.getNextAlarm();
-        if (mNextAlarm == null && mLockCalendarAlarm) {
-            mNextAlarm = mLockPatternUtils.getNextCalendarAlarm(mLockCalendarLookahead,
-                    mCalendars, mLockCalendarRemindersOnly);
-        }
         if (mNextAlarm != null) {
             mAlarmIcon = getContext().getResources().getDrawable(R.drawable.ic_lock_idle_alarm);
+        } else if (mLockCalendarAlarm) {
+            mNextAlarm = mLockPatternUtils.getNextCalendarAlarm(mLockCalendarLookahead,
+                    mCalendars, mLockCalendarRemindersOnly);
+        if (mNextAlarm != null) {
+                mAlarmIcon = getContext().getResources().getDrawable(R.drawable.ic_lock_idle_calendar);
+        }
         }
         updateStatusLines();
     }
@@ -939,10 +941,11 @@ class LockScreen extends LinearLayout implements KeyguardScreen, KeyguardUpdateM
         mNowPlaying.setVisibility(View.GONE);
         mAlbumArt.setVisibility(View.GONE);
 
-        if (am.isMusicActive() && !nowPlaying.equals("") && mLockMusicControls
-                && mCreationOrientation == Configuration.ORIENTATION_PORTRAIT) {
-            if (mNowPlayingToggle)
+        if (am.isMusicActive() && !nowPlaying.equals("") && mLockMusicControls) {
+            if (mNowPlayingToggle) {
                 mNowPlaying.setVisibility(View.VISIBLE);
+                mNowPlaying.setSelected(true); // set focus to TextView to allow scrolling
+            }
             // Set album art
             Uri uri = getArtworkUri(getContext(), KeyguardViewMediator.SongId(),
                     KeyguardViewMediator.AlbumId());

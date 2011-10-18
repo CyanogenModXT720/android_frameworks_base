@@ -1243,6 +1243,18 @@ status_t MPEG4Writer::Track::start(MetaData *params) {
     initTrackingProgressStatus(params);
 
     sp<MetaData> meta = new MetaData;
+    if (mIsRealTimeRecording && mOwner->numTracks() > 1) {
+        /*
+         * This extra delay of accepting incoming audio/video signals
+         * helps to align a/v start time at the beginning of a recording
+         * session, and it also helps eliminate the "recording" sound for
+         * camcorder applications.
+         *
+         * Ideally, this platform-specific value should be defined
+         * in media_profiles.xml file
+         */
+        startTimeUs += 1500000;
+    }
     meta->setInt64(kKeyTime, startTimeUs);
     status_t err = mSource->start(meta.get());
     if (err != OK) {
@@ -1850,6 +1862,15 @@ status_t MPEG4Writer::Track::threadEntry() {
         }
 
         timestampUs -= previousPausedDurationUs;
+        // TODO: Needs investigation. TI aac enc in use, sample with timestampUs 0 suddenly coming.
+        // This shouldn't happen. Sufficient start time delay (at line 1256) seems to take care of it, though.
+        if (timestampUs < 0) {
+            LOGE("Timestamp was 0!? A/V sync will be lost. Start time delay should be increased!");
+            LOGW("%s lastTimestampUs: %lld, previousPausedDurationUs: %lld, numsamples: %d", mIsAudio? "Audio": "Video", lastTimestampUs, previousPausedDurationUs, mNumSamples);
+            copy->release();
+            copy = NULL;
+            continue;
+        }
         CHECK(timestampUs >= 0);
 
         // Media time adjustment for real-time applications
@@ -1896,7 +1917,11 @@ status_t MPEG4Writer::Track::threadEntry() {
                      ((timestampUs * mTimeScale + 500000LL) / 1000000LL -
                      (lastTimestampUs * mTimeScale + 500000LL) / 1000000LL);
 
-            if (currDurationTicks != lastDurationTicks) {
+            // Force the first sample to have its own stts entry so that
+            // we can adjust its value later to maintain the A/V sync.
+            if (mNumSamples == 3 || currDurationTicks != lastDurationTicks) {
+                LOGV("%s lastDurationUs: %lld us, currDurationTicks: %lld us",
+                        mIsAudio? "Audio": "Video", lastDurationUs, currDurationTicks);
                 addOneSttsTableEntry(sampleCount, lastDurationUs);
                 sampleCount = 1;
             } else {
@@ -1909,6 +1934,8 @@ status_t MPEG4Writer::Track::threadEntry() {
             }
             previousSampleSize = sampleSize;
         }
+        LOGV("%s timestampUs/lastTimestampUs: %lld/%lld",
+                mIsAudio? "Audio": "Video", timestampUs, lastTimestampUs);
         lastDurationUs = timestampUs - lastTimestampUs;
         lastDurationTicks = currDurationTicks;
         lastTimestampUs = timestampUs;
@@ -1980,7 +2007,14 @@ status_t MPEG4Writer::Track::threadEntry() {
     } else {
         ++sampleCount;  // Count for the last sample
     }
+    if (mNumSamples <= 2) {
+        addOneSttsTableEntry(1, lastDurationUs);
+        if (sampleCount - 1 > 0) {
+            addOneSttsTableEntry(sampleCount - 1, lastDurationUs);
+        }
+    } else {
     addOneSttsTableEntry(sampleCount, lastDurationUs);
+    }
     mTrackDurationUs += lastDurationUs;
     mReachedEOS = true;
     LOGI("Received total/0-length (%d/%d) buffers and encoded %d frames. - %s",
@@ -2104,6 +2138,8 @@ void MPEG4Writer::Track::writeTrackHeader(
     time_t now = time(NULL);
     int32_t mvhdTimeScale = mOwner->getTimeScale();
     int64_t trakDurationUs = getDurationUs();
+    // Compensate for small start time difference from different media tracks
+    int64_t trackStartTimeOffsetUs = 0;
 
     mOwner->beginBox("trak");
 
@@ -2415,7 +2451,7 @@ void MPEG4Writer::Track::writeTrackHeader(
           mOwner->beginBox("stts");
             mOwner->writeInt32(0);  // version=0, flags=0
             mOwner->writeInt32(mNumSttsTableEntries);
-            int64_t prevTimestampUs = 0;
+            int64_t prevTimestampUs = trackStartTimeOffsetUs;
             for (List<SttsTableEntry>::iterator it = mSttsTableEntries.begin();
                  it != mSttsTableEntries.end(); ++it) {
                 mOwner->writeInt32(it->sampleCount);

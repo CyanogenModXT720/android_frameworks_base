@@ -348,6 +348,13 @@ public final class ActivityManagerService extends ActivityManagerNative
     // been idle for less than 120 seconds.
     static final long EMPTY_APP_IDLE_OFFSET = 120*1000;
     
+    // Apps to be kept running, defined by sys.keep_app_1 & _2 properties
+    static final String KEEP_APP_1;
+    static final String KEEP_APP_2;
+
+    static final boolean GMAPS_HACK;
+    static final String GMAPS_NLS = 
+            "com.google.android.apps.maps/com.google.android.location.internal.server.NetworkLocationService";
     static int getIntProp(String name, boolean allowZero) {
         String str = SystemProperties.get(name);
         if (str == null) {
@@ -382,6 +389,9 @@ public final class ActivityManagerService extends ActivityManagerNative
         HOME_APP_MEM = getIntProp("ro.HOME_APP_MEM", false)*PAGE_SIZE;
         HIDDEN_APP_MEM = getIntProp("ro.HIDDEN_APP_MEM", false)*PAGE_SIZE;
         EMPTY_APP_MEM = getIntProp("ro.EMPTY_APP_MEM", false)*PAGE_SIZE;
+        KEEP_APP_1 = SystemProperties.get("sys.keep_app_1", "0");
+        KEEP_APP_2 = SystemProperties.get("sys.keep_app_2", "0");
+        GMAPS_HACK = getIntProp("persist.sys.gmaps_hack", true) == 1;
     }
     
     static final int MY_PID = Process.myPid();
@@ -905,6 +915,7 @@ public final class ActivityManagerService extends ActivityManagerNative
     final AtomicBoolean mProcessStatsMutexFree = new AtomicBoolean(true);
 
     long mLastWriteTime = 0;
+    boolean mSuppressHomeLock = false;
 
     /**
      * Set to true after the system has finished booting.
@@ -3448,7 +3459,7 @@ public final class ActivityManagerService extends ActivityManagerNative
             }
             if (mPendingBroadcast != null && mPendingBroadcast.curApp.pid == pid) {
                 Slog.w(TAG, "Unattached app died before broadcast acknowledged, skipping");
-                mPendingBroadcast.state = BroadcastRecord.IDLE;
+                mPendingBroadcast.finishReceiver();
                 mPendingBroadcast.nextReceiver = mPendingBroadcastRecvIndex;
                 mPendingBroadcast = null;
                 scheduleBroadcastsLocked();
@@ -8980,6 +8991,12 @@ public final class ActivityManagerService extends ActivityManagerNative
         //Slog.i(TAG, "Bring up service:");
         //r.dump("  ");
 
+        if (GMAPS_HACK && r.shortName.equals(GMAPS_NLS)
+                && getProcessRecordLocked("com.google.android.apps.maps",
+                r.appInfo.uid) == null) {
+            // Slog.i(TAG, "Not starting Gmaps NetworkLocationService, Gmaps are not running!");
+            return true;
+        }
         if (r.app != null && r.app.thread != null) {
             sendServiceArgsLocked(r, false);
             return true;
@@ -9725,8 +9742,9 @@ public final class ActivityManagerService extends ActivityManagerNative
                 if (DEBUG_SERVICE) Slog.v(TAG, "unbindFinished in " + r
                         + " at " + b + ": apps="
                         + (b != null ? b.apps.size() : 0));
+                boolean inStopping = mStoppingServices.contains(r);
                 if (b != null) {
-                    if (b.apps.size() > 0) {
+                    if (b.apps.size() > 0 && !inStopping) {
                         // Applications have already bound since the last
                         // unbind, so just rebind right here.
                         requestServiceBindingLocked(r, b, true);
@@ -9737,7 +9755,7 @@ public final class ActivityManagerService extends ActivityManagerNative
                     }
                 }
 
-                serviceDoneExecutingLocked(r, mStoppingServices.contains(r));
+                serviceDoneExecutingLocked(r, inStopping);
 
                 Binder.restoreCallingIdentity(origId);
             }
@@ -9769,7 +9787,12 @@ public final class ActivityManagerService extends ActivityManagerNative
                             // We are done with the associated start arguments.
                             r.findDeliveredStart(startId, true);
                             // Don't stop if killed.
+                            if (GMAPS_HACK && r.shortName.equals(GMAPS_NLS)) {
+                                // Slog.i(TAG, "Stop Gmaps NetworkLocationService if killed.");
+                                r.stopIfKilled = true;
+                            } else {
                             r.stopIfKilled = false;
+                            }
                             break;
                         }
                         case Service.START_NOT_STICKY: {
@@ -11586,17 +11609,23 @@ public final class ActivityManagerService extends ActivityManagerNative
         int N;
         if ("com.android.mms".equals(app.processName) &&
             Settings.System.getInt(mContext.getContentResolver(),
-            Settings.System.LOCK_MMS_IN_MEMORY, 0) == 1 ) {
+            Settings.System.LOCK_MMS_IN_MEMORY, 1) == 1 ) {
             // MMS can die in situations of heavy memory pressure.
             // Always push it to the top.
             adj = FOREGROUND_APP_ADJ;
             schedGroup = Process.THREAD_GROUP_DEFAULT;
             app.adjType = "mms";
+        } else if (KEEP_APP_1.equals(app.processName) || KEEP_APP_2.equals(app.processName)) {
+            // apps to be kept running
+            adj = FOREGROUND_APP_ADJ;
+            schedGroup = Process.THREAD_GROUP_DEFAULT;
+            app.adjType = "foreground-service";
         } else if (app == TOP_APP) {
             // The last app on the list is the foreground app.
             adj = FOREGROUND_APP_ADJ;
             schedGroup = Process.THREAD_GROUP_DEFAULT;
             app.adjType = "top-activity";
+            mSuppressHomeLock = "com.android.camera".equals(app.processName);
         } else if (app.instrumentationClass != null) {
             // Don't want to kill running instrumentation.
             adj = FOREGROUND_APP_ADJ;
@@ -11617,12 +11646,12 @@ public final class ActivityManagerService extends ActivityManagerNative
             app.adjType = "exec-service";
         } else if (app.foregroundServices) {
             // The user is aware of this app, so make it visible.
-            adj = PERCEPTIBLE_APP_ADJ;
+            adj = VISIBLE_APP_ADJ;
             schedGroup = Process.THREAD_GROUP_DEFAULT;
             app.adjType = "foreground-service";
         } else if (app.forcingToForeground != null) {
             // The user is aware of this app, so make it visible.
-            adj = PERCEPTIBLE_APP_ADJ;
+            adj = VISIBLE_APP_ADJ;
             schedGroup = Process.THREAD_GROUP_DEFAULT;
             app.adjType = "force-foreground";
             app.adjSource = app.forcingToForeground;
@@ -11634,8 +11663,9 @@ public final class ActivityManagerService extends ActivityManagerNative
         } else if (app == mHomeProcess) {
             // This process is hosting what we currently consider to be the
             // home app, so we don't want to let it go into the background.
-            adj =  Settings.System.getInt(mContext.getContentResolver(),
-                    Settings.System.LOCK_HOME_IN_MEMORY, 0) == 1 ? VISIBLE_APP_ADJ : HOME_APP_ADJ;
+            adj = !mSuppressHomeLock && "0".equals(SystemProperties.get("sys.cardock.in_use", "0")) &&
+                    Settings.System.getInt(mContext.getContentResolver(),
+                    Settings.System.LOCK_HOME_IN_MEMORY, 1) == 1 ? VISIBLE_APP_ADJ : HOME_APP_ADJ;
             schedGroup = Process.THREAD_GROUP_BG_NONINTERACTIVE;
             app.adjType = "home";
         } else if ((N=app.activities.size()) != 0) {
@@ -11712,6 +11742,15 @@ public final class ActivityManagerService extends ActivityManagerNative
                     // Don't kill this process because it is doing work; it
                     // has said it is doing work.
                     app.keeping = true;
+                    if (GMAPS_HACK && s.shortName.equals(GMAPS_NLS)
+                            && getProcessRecordLocked("com.google.android.apps.maps",
+                            s.appInfo.uid) == null) {
+                        // Slog.i(TAG, "Let the Gmaps NetworkLocationService die! Gmaps are not running!");
+                        app.keeping = false;
+                        adj = hiddenAdj;
+                        app.hidden = true;
+                        app.adjType = "bg-services";
+                    }
                 }
                 if (s.connections.size() > 0 && (adj > FOREGROUND_APP_ADJ
                         || schedGroup == Process.THREAD_GROUP_BG_NONINTERACTIVE)) {

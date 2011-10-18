@@ -2258,6 +2258,12 @@ public final class Settings {
         public static final String STATUS_BAR_CM_BATTERY = "status_bar_cm_battery";
 
         /**
+         * What color for the status bar battery style
+         * @hide
+         */
+        public static final String STATUS_BAR_CM_BATTERY_COLOR = "status_bar_cm_battery_color";
+
+        /**
          * Whether to show the clock in status bar
          * of the stock battery icon
          * 0: don't show the clock
@@ -2445,6 +2451,13 @@ public final class Settings {
          * @hide
          */
         public static final String STATUS_BAR_BRIGHTNESS_TOGGLE = "status_bar_brightness_toggle";
+
+        /**
+         * Whether to force PLMN display for SPDI networks
+         *
+         * @hide
+         */
+        public static final String STATUS_BAR_FORCE_PLMN_DISPLAY = "status_bar_force_plmn_display";
 
         /**
          * Whether to display headset icon on status bar when headset is plugged in
@@ -2642,6 +2655,17 @@ public final class Settings {
          * @hide
          */
         public static final String LOCKSCREEN_CALENDAR_ALARM = "lockscreen_calendar_alarm";
+        /**
+         * Whether to show the next calendar event's location
+         * @hide
+         */
+        public static final String LOCKSCREEN_CALENDAR_SHOW_LOCATION = "lockscreen_calendar_show_location";
+
+        /**
+         * Whether to show the next calendar event's description
+         * @hide
+         */
+        public static final String LOCKSCREEN_CALENDAR_SHOW_DESCRIPTION = "lockscreen_calendar_show_description";
 
         /**
          * Which calendars to look for events

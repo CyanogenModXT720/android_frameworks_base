@@ -18,6 +18,7 @@
 
 #include "JNIHelp.h"
 #include "jni.h"
+#include <cutils/properties.h>
 #include <utils/Log.h>
 #include <utils/misc.h>
 

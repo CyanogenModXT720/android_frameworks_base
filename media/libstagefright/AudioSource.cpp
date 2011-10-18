@@ -23,21 +23,38 @@
 #include <media/AudioRecord.h>
 #include <media/stagefright/MediaBufferGroup.h>
 #include <media/stagefright/MediaDebug.h>
+#include <media/stagefright/MediaBuffer.h>
 #include <media/stagefright/MediaDefs.h>
 #include <media/stagefright/MetaData.h>
+#include <media/stagefright/foundation/ADebug.h>
 #include <cutils/properties.h>
 #include <stdlib.h>
 
 namespace android {
+static void AudioRecordCallbackFunction(int event, void *user, void *info) {
+    AudioSource *source = (AudioSource *) user;
+    switch (event) {
+        case AudioRecord::EVENT_MORE_DATA: {
+            source->dataCallbackTimestamp(*((AudioRecord::Buffer *) info), systemTime() / 1000);
+            break;
+        }
+        case AudioRecord::EVENT_OVERRUN: {
+            LOGW("AudioRecord reported overrun!");
+            break;
+        }
+        default:
+            // does nothing
+            break;
+    }
+}
 
 AudioSource::AudioSource(
         int inputSource, uint32_t sampleRate, uint32_t channels)
     : mStarted(false),
-      mCollectStats(false),
+      mSampleRate(sampleRate),
       mPrevSampleTimeUs(0),
-      mTotalLostFrames(0),
-      mPrevLostBytes(0),
-      mGroup(NULL) {
+      mNumFramesReceived(0),
+      mNumClientOwnedBuffers(0) {
 
     LOGV("sampleRate: %d, channels: %d", sampleRate, channels);
     CHECK(channels == 1 || channels == 2);
@@ -49,7 +66,9 @@ AudioSource::AudioSource(
                 inputSource, sampleRate, AudioSystem::PCM_16_BIT,
                 channels > 1? AudioSystem::CHANNEL_IN_STEREO: AudioSystem::CHANNEL_IN_MONO,
                 4 * kMaxBufferSize / sizeof(int16_t), /* Enable ping-pong buffers */
-                flags);
+                flags,
+                AudioRecordCallbackFunction,
+                this);
 
     mInitCheck = mRecord->initCheck();
 }
@@ -68,6 +87,7 @@ status_t AudioSource::initCheck() const {
 }
 
 status_t AudioSource::start(MetaData *params) {
+    Mutex::Autolock autoLock(mLock);
     if (mStarted) {
         return UNKNOWN_ERROR;
     }
@@ -102,7 +122,24 @@ status_t AudioSource::start(MetaData *params) {
     return err;
 }
 
+void AudioSource::releaseQueuedFrames_l() {
+    LOGV("releaseQueuedFrames_l");
+    List<MediaBuffer *>::iterator it;
+    while (!mBuffersReceived.empty()) {
+        it = mBuffersReceived.begin();
+        (*it)->release();
+        mBuffersReceived.erase(it);
+    }
+}
+
+void AudioSource::waitOutstandingEncodingFrames_l() {
+    LOGV("waitOutstandingEncodingFrames_l: %lld", mNumClientOwnedBuffers);
+    while (mNumClientOwnedBuffers > 0) {
+        mFrameEncodingCompletionCondition.wait(mLock);
+    }
+}
 status_t AudioSource::stop() {
+    Mutex::Autolock autoLock(mLock);
     if (!mStarted) {
         return UNKNOWN_ERROR;
     }
@@ -111,22 +148,17 @@ status_t AudioSource::stop() {
         return NO_INIT;
     }
 
+    mStarted = false;
     mRecord->stop();
 
-    delete mGroup;
-    mGroup = NULL;
-
-    mStarted = false;
-
-    if (mCollectStats) {
-        LOGI("Total lost audio frames: %lld",
-            mTotalLostFrames + (mPrevLostBytes >> 1));
-    }
+    waitOutstandingEncodingFrames_l();
+    releaseQueuedFrames_l();
 
     return OK;
 }
 
 sp<MetaData> AudioSource::getFormat() {
+    Mutex::Autolock autoLock(mLock);
     if (mInitCheck != OK) {
         return 0;
     }
@@ -206,6 +238,8 @@ void AudioSource::rampVolume(
 
 status_t AudioSource::read(
         MediaBuffer **out, const ReadOptions *options) {
+    Mutex::Autolock autoLock(mLock);
+    *out = NULL;
 
     if (mInitCheck != OK) {
         return NO_INIT;

@@ -230,6 +230,9 @@ status_t CameraSource::stop() {
                 mLastFrameTimestampUs - mFirstFrameTimeUs);
     }
 
+    if (mNumGlitches > 0) {
+        LOGW("%d long delays between neighboring video frames", mNumGlitches);
+    }
     CHECK_EQ(mNumFramesReceived, mNumFramesEncoded + mNumFramesDropped);
     return OK;
 }
