@@ -345,7 +345,6 @@ public class VolumePanel extends Handler
                             : com.android.internal.R.drawable.ic_volume_small);
         }
     }
-    }
 
     /**
      * Makes the large image view visible with the given icon.

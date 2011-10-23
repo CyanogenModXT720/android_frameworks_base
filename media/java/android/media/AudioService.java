@@ -1922,16 +1922,6 @@ public class AudioService extends IAudioService.Stub {
                 int state = intent.getIntExtra("state", 0);
                 int microphone = intent.getIntExtra("microphone", 0);
                 String name = intent.getStringExtra("name");
-                int lastHeadsetModeMusicVolume;
-                try {
-                    lastHeadsetModeMusicVolume = System.getInt(mContentResolver, state==1?SETTING_LAST_HEADSET_MEDIA_VOL:SETTING_LAST_SPEAKER_MEDIA_VOL);
-                } catch (SettingNotFoundException e) {
-                    lastHeadsetModeMusicVolume = -1;
-                }
-                System.putInt(mContentResolver, state==1?SETTING_LAST_SPEAKER_MEDIA_VOL:SETTING_LAST_HEADSET_MEDIA_VOL, getStreamVolume(AudioSystem.STREAM_MUSIC));
-                if (lastHeadsetModeMusicVolume >= 0) {
-                    setStreamVolume(AudioSystem.STREAM_MUSIC, lastHeadsetModeMusicVolume, AudioManager.FLAG_SHOW_UI);
-                }
                 
                 int lastHeadsetModeMusicVolume;
                 try {
