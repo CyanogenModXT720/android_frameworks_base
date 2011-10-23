@@ -99,12 +99,6 @@ public final class AttributeCache {
                 mPackages.clear();
         }
     }
-    
-    public void clearCache() {
-        synchronized (this) {
-                mPackages.clear();
-        }
-    }
     public Entry get(String packageName, int resId, int[] styleable) {
         synchronized (this) {
             Package pkg = mPackages.get(packageName);

@@ -355,14 +355,6 @@ public final class ActivityManagerService extends ActivityManagerNative
     static final boolean GMAPS_HACK;
     static final String GMAPS_NLS = 
             "com.google.android.apps.maps/com.google.android.location.internal.server.NetworkLocationService";
-    
-    // Apps to be kept running, defined by sys.keep_app_1 & _2 properties
-    static final String KEEP_APP_1;
-    static final String KEEP_APP_2;
-
-    static final boolean GMAPS_HACK;
-    static final String GMAPS_NLS = 
-            "com.google.android.apps.maps/com.google.android.location.internal.server.NetworkLocationService";
     static int getIntProp(String name, boolean allowZero) {
         String str = SystemProperties.get(name);
         if (str == null) {
@@ -924,8 +916,6 @@ public final class ActivityManagerService extends ActivityManagerNative
     final AtomicBoolean mProcessStatsMutexFree = new AtomicBoolean(true);
 
     long mLastWriteTime = 0;
-    boolean mSuppressHomeLock = false;
-
     boolean mSuppressHomeLock = false;
 
     /**
