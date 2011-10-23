@@ -2143,8 +2143,6 @@ void MPEG4Writer::Track::writeTrackHeader(
     time_t now = time(NULL);
     int32_t mvhdTimeScale = mOwner->getTimeScale();
     int64_t trakDurationUs = getDurationUs();
-    // Compensate for small start time difference from different media tracks
-    int64_t trackStartTimeOffsetUs = 0;
 
     // Compensate for small start time difference from different media tracks
     int64_t trackStartTimeOffsetUs = 0;

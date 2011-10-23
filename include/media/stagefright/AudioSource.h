@@ -47,8 +47,6 @@ struct AudioSource : public MediaSource, public MediaBufferObserver {
 
     virtual status_t read(
             MediaBuffer **buffer, const ReadOptions *options = NULL);
-    status_t dataCallbackTimestamp(const AudioRecord::Buffer& buffer, int64_t timeUs);
-    virtual void signalBufferReturned(MediaBuffer *buffer);
 
     status_t dataCallbackTimestamp(const AudioRecord::Buffer& buffer, int64_t timeUs);
     virtual void signalBufferReturned(MediaBuffer *buffer);
@@ -69,9 +67,6 @@ private:
         kAutoRampStartUs = 0,
     };
 
-    Mutex mLock;
-    Condition mFrameAvailableCondition;
-    Condition mFrameEncodingCompletionCondition;
 
     Mutex mLock;
     Condition mFrameAvailableCondition;
@@ -79,6 +74,10 @@ private:
     AudioRecord *mRecord;
     status_t mInitCheck;
     bool mStarted;
+    bool mCollectStats;
+    int64_t mTotalLostFrames;
+    int64_t mPrevLostBytes;
+
     int32_t mSampleRate;
 
     bool mTrackMaxAmplitude;
@@ -99,8 +98,6 @@ private:
     void rampVolume(
         int32_t startFrame, int32_t rampDurationFrames,
         uint8_t *data,   size_t bytes);
-    void releaseQueuedFrames_l();
-    void waitOutstandingEncodingFrames_l();
 
     void releaseQueuedFrames_l();
     void waitOutstandingEncodingFrames_l();
