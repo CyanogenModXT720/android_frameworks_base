@@ -17,6 +17,8 @@
 #ifndef ANDROID_AUDIOSYSTEM_H_
 #define ANDROID_AUDIOSYSTEM_H_
 
+#define HAVE_FM_RADIO 1
+
 #include <utils/RefBase.h>
 #include <utils/threads.h>
 #include <media/IAudioFlinger.h>

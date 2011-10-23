@@ -32,6 +32,8 @@
 
 // ----------------------------------------------------------------------------
 
+#define HAVE_FM_RADIO 1
+
 namespace android {
 
 // client singleton for AudioFlinger binder interface
