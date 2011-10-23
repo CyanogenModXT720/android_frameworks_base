@@ -186,6 +186,7 @@ public class AudioService extends IAudioService.Stub {
 
     private final static String SETTING_LAST_HEADSET_MEDIA_VOL = "android.media.AudioService.LAST_HEADSET_MEDIA_VOL";
     private final static String SETTING_LAST_SPEAKER_MEDIA_VOL = "android.media.AudioService.LAST_SPEAKER_MEDIA_VOL";
+
     private AudioSystem.ErrorCallback mAudioSystemCallback = new AudioSystem.ErrorCallback() {
         public void onError(int error) {
             switch (error) {
@@ -1932,6 +1933,17 @@ public class AudioService extends IAudioService.Stub {
                     setStreamVolume(AudioSystem.STREAM_MUSIC, lastHeadsetModeMusicVolume, AudioManager.FLAG_SHOW_UI);
                 }
                 
+                int lastHeadsetModeMusicVolume;
+                try {
+                    lastHeadsetModeMusicVolume = System.getInt(mContentResolver, state==1?SETTING_LAST_HEADSET_MEDIA_VOL:SETTING_LAST_SPEAKER_MEDIA_VOL);
+                } catch (SettingNotFoundException e) {
+                    lastHeadsetModeMusicVolume = -1;
+                }
+                System.putInt(mContentResolver, state==1?SETTING_LAST_SPEAKER_MEDIA_VOL:SETTING_LAST_HEADSET_MEDIA_VOL, getStreamVolume(AudioSystem.STREAM_MUSIC));
+                if (lastHeadsetModeMusicVolume >= 0) {
+                    setStreamVolume(AudioSystem.STREAM_MUSIC, lastHeadsetModeMusicVolume, AudioManager.FLAG_SHOW_UI);
+                }
+
                 if (name != null && !name.equalsIgnoreCase("1")) {
                     if (microphone != 0) {
                         boolean isConnected = mConnectedDevices.containsKey(AudioSystem.DEVICE_OUT_WIRED_HEADSET);

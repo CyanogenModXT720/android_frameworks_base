@@ -750,7 +750,7 @@ public class LockPatternUtils {
                     later,
                     where.toString(),
                     null);
-            if (cursor.moveToFirst()) {
+            if (cursor != null && cursor.moveToFirst()) {
                 String title = cursor.getString(0);
                 Date start = new Date(cursor.getLong(1));
                 String  description = cursor.getString(2);
@@ -764,12 +764,14 @@ public class LockPatternUtils {
                     sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
                     sb.append(sdf.format(start));
                 } else {
-                sb.append(DateFormat.format("E", start));
-                sb.append(" ");
-                sb.append(DateFormat.getTimeFormat(mContext).format(start));
+                    sb.append(DateFormat.format("E", start));
+                    sb.append(" ");
+                    sb.append(DateFormat.getTimeFormat(mContext).format(start));
                 }
+
                 sb.append(" ");
                 sb.append(title);
+
                 int showLocation = Settings.System.getInt(mContext.getContentResolver(),
                             Settings.System.LOCKSCREEN_CALENDAR_SHOW_LOCATION, 0);
 
@@ -811,6 +813,7 @@ public class LockPatternUtils {
                             break;
                     }
                 }
+
                 nextCalendarAlarm = sb.toString();
             }
         } finally {

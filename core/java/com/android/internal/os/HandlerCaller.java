@@ -45,6 +45,7 @@ public class HandlerCaller {
         public int argi4;
         public int argi5;
         public int argi6;
+
         /*package*/ void clearForRecycle() {
              arg1 = null;
              arg2 = null;

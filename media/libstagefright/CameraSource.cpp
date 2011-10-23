@@ -233,6 +233,7 @@ status_t CameraSource::stop() {
     if (mNumGlitches > 0) {
         LOGW("%d long delays between neighboring video frames", mNumGlitches);
     }
+
     CHECK_EQ(mNumFramesReceived, mNumFramesEncoded + mNumFramesDropped);
     return OK;
 }
@@ -340,10 +341,9 @@ void CameraSource::dataCallbackTimestamp(int64_t timestampUs,
         int32_t msgType, const sp<IMemory> &data) {
     LOGV("dataCallbackTimestamp: timestamp %lld us", timestampUs);
     Mutex::Autolock autoLock(mLock);
-    if (!mStarted) {
+    if (!mStarted || (mNumFramesReceived == 0 && timestampUs < mStartTimeUs)) {
+        LOGV("Drop frame at %lld/%lld us", timestampUs, mStartTimeUs);
         releaseOneRecordingFrame(data);
-        ++mNumFramesReceived;
-        ++mNumFramesDropped;
         return;
     }
 

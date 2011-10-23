@@ -1255,7 +1255,9 @@ status_t MPEG4Writer::Track::start(MetaData *params) {
          */
         startTimeUs += 1500000;
     }
+
     meta->setInt64(kKeyTime, startTimeUs);
+
     status_t err = mSource->start(meta.get());
     if (err != OK) {
         mDone = mReachedEOS = true;
@@ -1862,6 +1864,7 @@ status_t MPEG4Writer::Track::threadEntry() {
         }
 
         timestampUs -= previousPausedDurationUs;
+
         // TODO: Needs investigation. TI aac enc in use, sample with timestampUs 0 suddenly coming.
         // This shouldn't happen. Sufficient start time delay (at line 1256) seems to take care of it, though.
         if (timestampUs < 0) {
@@ -2007,14 +2010,16 @@ status_t MPEG4Writer::Track::threadEntry() {
     } else {
         ++sampleCount;  // Count for the last sample
     }
+
     if (mNumSamples <= 2) {
         addOneSttsTableEntry(1, lastDurationUs);
         if (sampleCount - 1 > 0) {
             addOneSttsTableEntry(sampleCount - 1, lastDurationUs);
         }
     } else {
-    addOneSttsTableEntry(sampleCount, lastDurationUs);
+        addOneSttsTableEntry(sampleCount, lastDurationUs);
     }
+
     mTrackDurationUs += lastDurationUs;
     mReachedEOS = true;
     LOGI("Received total/0-length (%d/%d) buffers and encoded %d frames. - %s",
@@ -2141,6 +2146,9 @@ void MPEG4Writer::Track::writeTrackHeader(
     // Compensate for small start time difference from different media tracks
     int64_t trackStartTimeOffsetUs = 0;
 
+    // Compensate for small start time difference from different media tracks
+    int64_t trackStartTimeOffsetUs = 0;
+
     mOwner->beginBox("trak");
 
       mOwner->beginBox("tkhd");
@@ -2179,26 +2187,8 @@ void MPEG4Writer::Track::writeTrackHeader(
 
       int64_t moovStartTimeUs = mOwner->getStartTimestampUs();
       if (mStartTimestampUs != moovStartTimeUs) {
-        mOwner->beginBox("edts");
-          mOwner->beginBox("elst");
-            mOwner->writeInt32(0);           // version=0, flags=0: 32-bit time
-            mOwner->writeInt32(2);           // never ends with an empty list
-
-            // First elst entry: specify the starting time offset
-            int64_t offsetUs = mStartTimestampUs - moovStartTimeUs;
-            LOGV("OffsetUs: %lld", offsetUs);
-            int32_t seg = (offsetUs * mvhdTimeScale + 5E5) / 1E6;
-            mOwner->writeInt32(seg);         // in mvhd timecale
-            mOwner->writeInt32(-1);          // starting time offset
-            mOwner->writeInt32(1 << 16);     // rate = 1.0
-
-            // Second elst entry: specify the track duration
-            seg = (trakDurationUs * mvhdTimeScale + 5E5) / 1E6;
-            mOwner->writeInt32(seg);         // in mvhd timescale
-            mOwner->writeInt32(0);
-            mOwner->writeInt32(1 << 16);
-          mOwner->endBox();
-        mOwner->endBox();
+          CHECK(mStartTimestampUs > moovStartTimeUs);
+          trackStartTimeOffsetUs = mStartTimestampUs - moovStartTimeUs;
       }
 
       mOwner->beginBox("mdia");

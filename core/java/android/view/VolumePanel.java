@@ -340,9 +340,10 @@ public class VolumePanel extends Handler
                     ? com.android.internal.R.drawable.ic_volume_headset_off_small
                             : com.android.internal.R.drawable.ic_volume_headset_small);
         } else {
-        mSmallStreamIcon.setImageResource(index == 0
-                ? com.android.internal.R.drawable.ic_volume_off_small
-                : com.android.internal.R.drawable.ic_volume_small);
+            mSmallStreamIcon.setImageResource(index == 0
+                    ? com.android.internal.R.drawable.ic_volume_off_small
+                            : com.android.internal.R.drawable.ic_volume_small);
+        }
     }
     }
 

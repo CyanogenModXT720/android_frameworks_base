@@ -93,6 +93,12 @@ public final class AttributeCache {
             }
         }
     }
+
+    public void clearCache() {
+        synchronized (this) {
+                mPackages.clear();
+        }
+    }
     
     public void clearCache() {
         synchronized (this) {

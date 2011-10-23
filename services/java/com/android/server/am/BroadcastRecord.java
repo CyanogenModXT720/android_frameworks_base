@@ -96,6 +96,7 @@ class BroadcastRecord extends Binder {
         resultExtras = extras;
         resultAbort = abort;
     }
+
     void dump(PrintWriter pw, String prefix) {
         final long now = SystemClock.uptimeMillis();
 

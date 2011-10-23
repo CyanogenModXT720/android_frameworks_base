@@ -660,6 +660,40 @@ public class RingtoneManager {
 
         return null;
     }
+
+    /**
+     * Gets the ringtone Uri by looking up the system default ringtone from SystemProperties.
+     *
+     * @param context A context used for querying.
+     * @param setting The ringtone setting to query for. One of Settings.System.RINGTONE,
+     *                Settings.System.NOTIFICATION_SOUND, or Settings.System.ALARM_ALERT.
+     * @return A Uri pointing to the customized default sound for the sound type.
+     */
+    private static Uri getDefaultRingtoneUri(Context context, String setting) {
+        final String name = SystemProperties.get("ro.config." + setting);
+        if (name != null && !name.equals("")) {
+            Cursor c = null;
+            try {
+                c = context.getContentResolver().query(MediaStore.Audio.Media.INTERNAL_CONTENT_URI,
+                        new String[]{MediaStore.Audio.Media._ID,
+                        MediaStore.Audio.Media.DISPLAY_NAME},
+                        MediaStore.Audio.Media.DISPLAY_NAME + " = ?", new String[] {name},
+                        MediaStore.Audio.Media.DEFAULT_SORT_ORDER);
+
+                if (c != null && c.moveToFirst()) {
+                    final int idIndex = c.getColumnIndex(MediaStore.Audio.Media._ID);
+                    final int id = c.getInt(idIndex);
+                    return Uri.withAppendedPath(MediaStore.Audio.Media.INTERNAL_CONTENT_URI,
+                            String.valueOf(id));
+                }
+            } finally {
+                if (c != null) {
+                    c.close();
+                }
+            }
+        }
+        return null;
+    }
     
     /**
      * Gets the ringtone Uri by looking up the system default ringtone from SystemProperties.
@@ -711,6 +745,7 @@ public class RingtoneManager {
         String setting = getSettingForType(type);
         if (setting == null) return null;
         final String uriString = Settings.System.getString(context.getContentResolver(), setting);
+
         // if uriString can't be found, get the "original" customized default
         // from system properties.
         if (uriString != null) {
@@ -732,6 +767,7 @@ public class RingtoneManager {
                 }
             }
         }
+
         return uriString != null ? Uri.parse(uriString) : null;
     }
     
