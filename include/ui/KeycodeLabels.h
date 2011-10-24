@@ -161,10 +161,10 @@ static const KeycodeLabel KEYCODES[] = {
     { "FUNC_7", 98 },
     { "FUNC_8", 99 },
     { "QUECHAR", 100 },
-	
+#endif	
 	{NULL, 0 }
 };
-#endif
+
 // These constants need to match the above mappings.
 typedef enum KeyCode {
     kKeyCodeUnknown = 0,
