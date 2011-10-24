@@ -45,9 +45,7 @@ public:
         ENFORCED_AUDIBLE = 7, // Sounds that cannot be muted by user and must be routed to speaker
         DTMF             = 8,
         TTS              = 9,
-#ifdef HAVE_FM_RADIO
         FM              = 10,
-#endif
         NUM_STREAM_TYPES
     };
 
@@ -159,6 +157,7 @@ public:
         MODE_NORMAL = 0,
         MODE_RINGTONE,
         MODE_IN_CALL,
+		MODE_FM,
         MODE_IN_COMMUNICATION,
         NUM_MODES  // not a valid entry, denotes end-of-list
     };
@@ -514,6 +513,9 @@ public:
     static const char *keyFmOn;
     static const char *keyFmOff;
 #endif
+    static const char *keyFMLaunch;
+    static const char *keyFMRouting;
+    static const char *keyHDMIRouting;
     static const char *keyInputSource;
 
     String8 toString();
