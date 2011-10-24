@@ -1591,9 +1591,9 @@ AudioPolicyManagerBase::routing_strategy AudioPolicyManagerBase::getStrategy(
         // while key clicks are played produces a poor result
     case AudioSystem::TTS:
     case AudioSystem::MUSIC:
-#ifdef HAVE_FM_RADIO
+//#ifdef HAVE_FM_RADIO
     case AudioSystem::FM:
-#endif
+//#endif
         return STRATEGY_MEDIA;
     }
 }
@@ -1970,9 +1970,9 @@ status_t AudioPolicyManagerBase::checkAndSetVolume(int stream, int index, audio_
     // - the float value returned by computeVolume() changed
     // - the force flag is set
     if (volume != mOutputs.valueFor(output)->mCurVolume[stream] ||
-#ifdef HAVE_FM_RADIO
+//#ifdef HAVE_FM_RADIO
             (stream == AudioSystem::FM) ||
-#endif
+//#endif
             (stream == AudioSystem::VOICE_CALL) || force) {
         mOutputs.valueFor(output)->mCurVolume[stream] = volume;
         LOGV("setStreamVolume() for output %d stream %d, volume %f, delay %d", output, stream, volume, delayMs);
@@ -1982,7 +1982,7 @@ status_t AudioPolicyManagerBase::checkAndSetVolume(int stream, int index, audio_
             // offset value to reflect actual hardware volume that never reaches 0
             // 1% corresponds roughly to first step in VOICE_CALL stream volume setting (see AudioService.java)
             volume = 0.01 + 0.99 * volume;
-#ifdef HAVE_FM_RADIO
+//#ifdef HAVE_FM_RADIO
         } else if (stream == AudioSystem::FM) {
             float fmVolume = -1.0;
             fmVolume = computeVolume(stream, index, output, device);
@@ -1990,7 +1990,7 @@ status_t AudioPolicyManagerBase::checkAndSetVolume(int stream, int index, audio_
                 mpClientInterface->setFmVolume(fmVolume, delayMs);
             }
             return NO_ERROR;
-#endif
+//#endif
         }
 
         mpClientInterface->setStreamVolume((AudioSystem::stream_type)stream, volume, output, delayMs);

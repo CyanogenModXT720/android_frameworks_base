@@ -690,7 +690,7 @@ public:
         return reply.readInt32();
     }
 
-#ifdef HAVE_FM_RADIO
+//#ifdef HAVE_FM_RADIO
     virtual status_t setFmVolume(float volume)
     {
         Parcel data, reply;
@@ -699,7 +699,7 @@ public:
         remote()->transact(SET_FM_VOLUME, data, &reply);
         return reply.readInt32();
     }
-#endif
+//#endif
 };
 
 IMPLEMENT_META_INTERFACE(AudioFlinger, "android.media.IAudioFlinger");
@@ -1056,14 +1056,14 @@ status_t BnAudioFlinger::onTransact(
             reply->writeInt32(moveEffects(session, srcOutput, dstOutput));
             return NO_ERROR;
         } break;
-#ifdef HAVE_FM_RADIO
+//#ifdef HAVE_FM_RADIO
         case SET_FM_VOLUME: {
             CHECK_INTERFACE(IAudioFlinger, data, reply);
             float volume = data.readFloat();
             reply->writeInt32( setFmVolume(volume) );
             return NO_ERROR;
         } break;
-#endif
+//#endif
         default:
             return BBinder::onTransact(code, data, reply, flags);
     }

@@ -89,9 +89,9 @@ extern int register_android_message_digest_sha1(JNIEnv *env);
 
 extern int register_android_util_FloatMath(JNIEnv* env);
 
-#ifdef HAVE_FM_RADIO
+//#ifdef HAVE_FM_RADIO
 extern int register_android_hardware_fm_fmradio(JNIEnv* env);
-#endif
+//#endif
 
 namespace android {
 

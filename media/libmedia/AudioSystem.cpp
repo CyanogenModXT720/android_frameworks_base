@@ -32,7 +32,6 @@
 
 // ----------------------------------------------------------------------------
 
-#define HAVE_FM_RADIO 1
 
 namespace android {
 
@@ -372,14 +371,14 @@ int AudioSystem::newAudioSessionId() {
     return af->newAudioSessionId();
 }
 
-#ifdef HAVE_FM_RADIO
+//#ifdef HAVE_FM_RADIO
 status_t AudioSystem::setFmVolume(float value)
 {
     const sp<IAudioFlinger>& af = AudioSystem::get_audio_flinger();
     if (af == 0) return PERMISSION_DENIED;
     return af->setFmVolume(value);
 }
-#endif
+//#endif
 
 // ---------------------------------------------------------------------------
 
@@ -858,13 +857,11 @@ const char *AudioParameter::keySamplingRate = "sampling_rate";
 const char *AudioParameter::keyFormat = "format";
 const char *AudioParameter::keyChannels = "channels";
 const char *AudioParameter::keyFrameCount = "frame_count";
-#ifdef HAVE_FM_RADIO
 const char *AudioParameter::keyFmOn = "fm_on";
 const char *AudioParameter::keyFmOff = "fm_off";
 const char *AudioParameter::keyFMLaunch = "FM_launch";
 const char *AudioParameter::keyFMRouting = "FM_routing";
 const char *AudioParameter::keyHDMIRouting ="HDMI_routing";
-#endif
 const char *AudioParameter::keyInputSource = "input_source";
 
 AudioParameter::AudioParameter(const String8& keyValuePairs)

@@ -105,9 +105,9 @@ public:
     virtual             ~AudioHardwareGeneric();
     virtual status_t    initCheck();
     virtual status_t    setVoiceVolume(float volume);
-#ifdef HAVE_FM_RADIO
+//#ifdef HAVE_FM_RADIO
     virtual status_t    setFmVolume(float volume);
-#endif
+//#endif
     virtual status_t    setMasterVolume(float volume);
 
     // mic mute
