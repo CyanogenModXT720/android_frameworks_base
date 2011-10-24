@@ -19,6 +19,7 @@ package com.android.server;
 import com.android.internal.app.IBatteryStats;
 import com.android.internal.app.ShutdownThread;
 import com.android.server.am.BatteryStatsService;
+import com.android.server.AttributeCache;
 
 import android.app.ActivityManagerNative;
 import android.app.IActivityManager;
@@ -418,8 +419,9 @@ class PowerManagerService extends IPowerManager.Stub
                     // turn on.  Some devices want this because they don't have a
                     // charging LED.
                     synchronized (mLocks) {
-                        if (!wasPowered || (mPowerState & SCREEN_ON_BIT) != 0 ||
-                                mUnplugTurnsOnScreen) {
+                        if ("0".equals(SystemProperties.get("persist.sys.no_action_on_plug", "0")) &&
+                                (!wasPowered || (mPowerState & SCREEN_ON_BIT) != 0 ||
+                                mUnplugTurnsOnScreen)) {
                             forceUserActivityLocked();
                         }
                     }
@@ -638,9 +640,9 @@ class PowerManagerService extends IPowerManager.Stub
                                 PowerManager.PARTIAL_WAKE_LOCK, "Proximity Partial", false);
 
         mScreenOnIntent = new Intent(Intent.ACTION_SCREEN_ON);
-        mScreenOnIntent.addFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY);
+//        mScreenOnIntent.addFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY);
         mScreenOffIntent = new Intent(Intent.ACTION_SCREEN_OFF);
-        mScreenOffIntent.addFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY);
+//        mScreenOffIntent.addFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY);
 
         Resources resources = mContext.getResources();
 
@@ -1693,6 +1695,11 @@ class PowerManagerService extends IPowerManager.Stub
                     mHighestLightSensorValue = -1;
                     lightFilterStop();
                     resetLastLightValues();
+                    AttributeCache ac = AttributeCache.instance();
+                    if (ac != null) {
+                        ac.clearCache();
+                        // Slog.w(TAG, "AttributeCache cleared");
+                    }
                 }
                 else if (!mAutoBrightessEnabled && SystemProperties.getBoolean(
                     "ro.hardware.respect_als", false)) {
@@ -2136,7 +2143,7 @@ class PowerManagerService extends IPowerManager.Stub
             final boolean electrifying = animating &&
                 ((mElectronBeamAnimationOff && targetValue == Power.BRIGHTNESS_OFF) ||
                  (mElectronBeamAnimationOn && (int)curValue == Power.BRIGHTNESS_OFF));
-            if (mAnimateScreenLights || !electrifying) {
+            if (mAnimateScreenLights && !electrifying) {
                 synchronized (mLocks) {
                     long now = SystemClock.uptimeMillis();
                     boolean more = mScreenBrightness.stepLocked();
