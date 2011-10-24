@@ -371,14 +371,14 @@ int AudioSystem::newAudioSessionId() {
     return af->newAudioSessionId();
 }
 
-//#ifdef HAVE_FM_RADIO
+#ifdef HAVE_FM_RADIO
 status_t AudioSystem::setFmVolume(float value)
 {
     const sp<IAudioFlinger>& af = AudioSystem::get_audio_flinger();
     if (af == 0) return PERMISSION_DENIED;
     return af->setFmVolume(value);
 }
-//#endif
+#endif
 
 // ---------------------------------------------------------------------------
 
