@@ -602,8 +602,7 @@ public class StatusBarPolicy {
         }
     };
 
-    private boolean mShowCmBattery;
-    private boolean mCmBatteryStatus;
+    private boolean mStatusBarBattery;
     // need another var that superceding mPhoneSignalHidden
     private boolean mShowCmSignal;
 
@@ -617,7 +616,7 @@ public class StatusBarPolicy {
         void observe() {
             ContentResolver resolver = mContext.getContentResolver();
             resolver.registerContentObserver(Settings.System.getUriFor(
-                    Settings.System.STATUS_BAR_CM_BATTERY), false, this);
+                    Settings.System.STATUS_BAR_BATTERY), false, this);
 
             resolver.registerContentObserver(Settings.System
                     .getUriFor(Settings.System.STATUS_BAR_CM_SIGNAL_TEXT), false, this);
@@ -805,11 +804,8 @@ public class StatusBarPolicy {
     private final void updateBattery(Intent intent) {
         final int id = intent.getIntExtra("icon-small", 0);
         int level = intent.getIntExtra("level", 0);
-        if(!mShowCmBattery || mCmBatteryStatus != mShowCmBattery) {
-                mService.setIcon("battery", id, level);
-                mService.setIconVisibility("battery", !mShowCmBattery);
-                mCmBatteryStatus = mShowCmBattery;
-        }
+        mService.setIcon("battery", id, level);
+        mService.setIconVisibility("battery", mStatusBarBattery);
 
         boolean plugged = intent.getIntExtra("plugged", 0) != 0;
         level = intent.getIntExtra("level", -1);
@@ -1645,10 +1641,9 @@ public class StatusBarPolicy {
     private void updateSettings(){
         ContentResolver resolver = mContext.getContentResolver();
 
-        mShowCmBattery = (Settings.System.getInt(resolver,
-                Settings.System.STATUS_BAR_CM_BATTERY, 0) > 0);
-        mCmBatteryStatus = !mShowCmBattery;
-        mService.setIconVisibility("battery", !mShowCmBattery);
+        mStatusBarBattery = (Settings.System.getInt(resolver,
+                Settings.System.STATUS_BAR_BATTERY, 0) == 0);
+        mService.setIconVisibility("battery", mStatusBarBattery);
 
         //0 will hide the cmsignaltext and show the signal bars
         mShowCmSignal = Settings.System.getInt(mContext.getContentResolver(),
