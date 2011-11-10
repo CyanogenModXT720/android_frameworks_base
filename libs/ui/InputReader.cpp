@@ -346,12 +346,15 @@ InputDevice* InputReader::createDevice(int32_t deviceId, const String8& name, ui
 
     // Touchscreen-like devices.
     if (classes & INPUT_DEVICE_CLASS_TOUCHSCREEN_MT) {
-#ifdef ZEUS_TOUCHPADS
+#ifdef TOUCHPAD_INPUT_DEVICE_ID
         /* According to the Sony Ericsson SDK, the jogdials should be interpreted
          * as an AINPUT_SOURCE_TOUCHPAD. According to getSources() above, a
          * touchpad is simply a device with a negative associated display id.
+         *
+         * This is also available to others who need input touchpads to be
+         * recognized as such and not as a regular touchscreen.
          */
-        if (deviceId == 0x10004) {
+        if (deviceId == TOUCHPAD_INPUT_DEVICE_ID) {
             device->addMapper(new MultiTouchInputMapper(device, -1));
         } else {
             device->addMapper(new MultiTouchInputMapper(device, associatedDisplayId));
@@ -978,6 +981,31 @@ void KeyboardInputMapper::processKey(nsecs_t when, bool down, int32_t keyCode,
                 }
 
                 keyCode = rotateKeyCode(keyCode, orientation);
+                if (keyCode == AKEYCODE_SWITCH_CHARSET) {
+                    char keypadSecondary[PROPERTY_VALUE_MAX];
+                    property_get("persist.sys.keypad_type_sec", keypadSecondary, "none");
+                    if (strcmp(keypadSecondary, "none") == 0) {
+                        keyCode = AKEYCODE_MENU;
+                    } else {
+                        char keypadPrimary[PROPERTY_VALUE_MAX];
+                        char keypadCurrentFileName[PROPERTY_VALUE_MAX];
+                        char keypadSecFileName[PROPERTY_VALUE_MAX];
+                        char keypadPriFileName[PROPERTY_VALUE_MAX];
+                        property_get("persist.sys.keypad_type", keypadPrimary, "");
+                        property_get("hw.keyboards.0.devname", keypadCurrentFileName, "");
+                        property_get("ro.sys.keypad_prefix", keypadSecFileName, "");
+                        strcpy(keypadPriFileName, keypadSecFileName); //prefix
+                        strcat(keypadPriFileName, keypadPrimary);
+                        strcat(keypadSecFileName, keypadSecondary);
+                        if (strcmp(keypadCurrentFileName,keypadPriFileName) == 0) {
+                            // change to secondary kcm filename
+                            property_set("hw.keyboards.0.devname", keypadSecFileName);
+                        } else {
+                            // change to primary kcm filename
+                            property_set("hw.keyboards.0.devname", keypadPriFileName);
+                        }
+                    }
+                }
             }
 
             // Add key down.

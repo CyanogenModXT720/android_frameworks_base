@@ -2160,7 +2160,11 @@ status_t MPEG4Writer::Track::threadEntry() {
                      ((timestampUs * mTimeScale + 500000LL) / 1000000LL -
                      (lastTimestampUs * mTimeScale + 500000LL) / 1000000LL);
 
-            if (currDurationTicks != lastDurationTicks) {
+            // Force the first sample to have its own stts entry so that
+            // we can adjust its value later to maintain the A/V sync.
+            if (mNumSamples == 3 || currDurationTicks != lastDurationTicks) {
+                LOGV("%s lastDurationUs: %lld us, currDurationTicks: %lld us",
+                        mIsAudio? "Audio": "Video", lastDurationUs, currDurationTicks);
 #if defined(OMAP_ENHANCEMENT) && defined(TARGET_OMAP4)
             if(!mIsAudio) {
                 //Collect timestamps
@@ -2261,6 +2265,7 @@ status_t MPEG4Writer::Track::threadEntry() {
     } else {
         ++sampleCount;  // Count for the last sample
     }
+
 #if defined(OMAP_ENHANCEMENT) && defined(TARGET_OMAP4)
     if(!mIsAudio) {
         //Collect timestamps
@@ -2271,7 +2276,14 @@ status_t MPEG4Writer::Track::threadEntry() {
         addOneSttsTableEntry(sampleCount, lastDurationUs);
     }
 #else
-    addOneSttsTableEntry(sampleCount, lastDurationUs);
+    if (mNumSamples <= 2) {
+        addOneSttsTableEntry(1, lastDurationUs);
+        if (sampleCount - 1 > 0) {
+            addOneSttsTableEntry(sampleCount - 1, lastDurationUs);
+        }
+    } else {
+        addOneSttsTableEntry(sampleCount, lastDurationUs);
+    }
 #endif
 
     mTrackDurationUs += lastDurationUs;
