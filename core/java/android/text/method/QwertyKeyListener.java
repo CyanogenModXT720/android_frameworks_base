@@ -72,7 +72,7 @@ public class QwertyKeyListener extends BaseKeyListener {
     private static void updateMPSets() {
         MP_SETS.clear();
 
-        // for Russian charset
+        // for Cyrillic/Russian charset
 
         MP_SETS.put('\u0439', "\u0446");
         MP_SETS.put('\u0419', "\u0426");
@@ -82,10 +82,23 @@ public class QwertyKeyListener extends BaseKeyListener {
         MP_SETS.put('\u042f', "\u0427");
         MP_SETS.put('\u0445', "\u044a");
         MP_SETS.put('\u0425', "\u042a");
-        MP_SETS.put('\u0437', "\u003f");
-        MP_SETS.put('\u0417', "\u003f");
-        MP_SETS.put('\u044e', "\u002c");
-        MP_SETS.put('\u042e', "\u002c");
+        MP_SETS.put('\u044e', "\u003f");
+        MP_SETS.put('\u042e', "\u003f");
+        MP_SETS.put('\u0436', "\u044d");
+        MP_SETS.put('\u0416', "\u042d");
+        MP_SETS.put('\u0446', "\u0447");
+        MP_SETS.put('\u0426', "\u0427");
+        MP_SETS.put('\u0448', "\u0449");
+        MP_SETS.put('\u0428', "\u0429");
+        MP_SETS.put('\u0430', "\u044f");
+        MP_SETS.put('\u0410', "\u042f");
+        MP_SETS.put('\u0435', "\u044d");
+        MP_SETS.put('\u0415', "\u042d");
+        MP_SETS.put('\u0437', "\u0436");
+        MP_SETS.put('\u0417', "\u0416");
+        MP_SETS.put('\u0437', "\u0436");
+        MP_SETS.put('\u041e', "\u0401");
+        MP_SETS.put('\u043e', "\u0451");
 
         if (mLang.equals("cs")) {
             MP_SETS.put('A', "\u00C1");
@@ -241,6 +254,8 @@ public class QwertyKeyListener extends BaseKeyListener {
             MP_SETS.put('i', "\u00EE");
             MP_SETS.put('s', "\u0219");
             MP_SETS.put('t', "\u0163");
+        } else if (mLang.equals("ru")) {
+            MP_SETS.put('\u002e', "\u002c");
         } else if (mLang.equals("sk")) {
             MP_SETS.put('A', "\u00C1\u00C4");
             MP_SETS.put('C', "\u010C");
@@ -270,6 +285,13 @@ public class QwertyKeyListener extends BaseKeyListener {
             MP_SETS.put('u', "\u00FA");
             MP_SETS.put('y', "\u00FD");
             MP_SETS.put('z', "\u017E");
+        } else if (mLang.equals("sl")) {
+            MP_SETS.put('c', "\u010D");
+            MP_SETS.put('s', "\u0161");
+            MP_SETS.put('z', "\u017E");
+            MP_SETS.put('C', "\u010C");
+            MP_SETS.put('S', "\u0160");
+            MP_SETS.put('Z', "\u017D");
         } else if (mLang.equals("sv")) {
             MP_SETS.put('A', "\u00C4\u00C5");
             MP_SETS.put('E', "\u00C9");
@@ -739,7 +761,7 @@ public class QwertyKeyListener extends BaseKeyListener {
         PICKER_SETS.put('<', "\u2264\u00ab\u2039");
         PICKER_SETS.put('>', "\u2265\u00bb\u203a");
 
-        // Russian
+        // Cyrillic/Russian
 
         PICKER_SETS.put('\u0439', "\u0446");
         PICKER_SETS.put('\u0419', "\u0426");
@@ -749,10 +771,23 @@ public class QwertyKeyListener extends BaseKeyListener {
         PICKER_SETS.put('\u042f', "\u0427");
         PICKER_SETS.put('\u0445', "\u044a");
         PICKER_SETS.put('\u0425', "\u042a");
-        PICKER_SETS.put('\u0437', "\u003f");
-        PICKER_SETS.put('\u0417', "\u003f");
-        PICKER_SETS.put('\u044e', "\u002c");
-        PICKER_SETS.put('\u042e', "\u002c");
+        PICKER_SETS.put('\u044e', "\u003f");
+        PICKER_SETS.put('\u042e', "\u003f");
+        PICKER_SETS.put('\u0436', "\u044d");
+        PICKER_SETS.put('\u0416', "\u042d");
+        PICKER_SETS.put('\u0446', "\u0447");
+        PICKER_SETS.put('\u0426', "\u0427");
+        PICKER_SETS.put('\u0448', "\u0449");
+        PICKER_SETS.put('\u0428', "\u0429");
+        PICKER_SETS.put('\u0430', "\u044f");
+        PICKER_SETS.put('\u0410', "\u042f");
+        PICKER_SETS.put('\u0435', "\u044d");
+        PICKER_SETS.put('\u0415', "\u042d");
+        PICKER_SETS.put('\u0437', "\u0436");
+        PICKER_SETS.put('\u0417', "\u0416");
+        PICKER_SETS.put('\u0437', "\u0436");
+        PICKER_SETS.put('\u041e', "\u0401");
+        PICKER_SETS.put('\u043e', "\u0451");
 
     };
 
