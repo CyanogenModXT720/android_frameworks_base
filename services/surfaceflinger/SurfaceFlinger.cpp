@@ -152,6 +152,13 @@ overlay_control_device_t* SurfaceFlinger::getOverlayEngine() const
     return graphicPlane(0).displayHardware().getOverlayEngine();
 }
 
+#ifdef OMAP_ENHANCEMENT
+PixelFormat SurfaceFlinger::getFormat() const
+{
+    return graphicPlane(0).displayHardware().getFormat();
+}
+#endif
+
 sp<IMemoryHeap> SurfaceFlinger::getCblk() const
 {
     return mServerHeap;
@@ -410,7 +417,9 @@ bool SurfaceFlinger::threadLoop()
 
 #ifdef USE_COMPOSITION_BYPASS
         if (handleBypassLayer()) {
+#ifndef OMAP_ENHANCEMENT
             unlockClients();
+#endif
             return true;
         }
 #endif
@@ -431,8 +440,6 @@ bool SurfaceFlinger::threadLoop()
 
         logger.log(GraphicLog::SF_REPAINT_DONE, index);
     } else {
-        // pretend we did the post
-        hw.compositionComplete();
         usleep(16667); // 60 fps period
     }
     return true;
