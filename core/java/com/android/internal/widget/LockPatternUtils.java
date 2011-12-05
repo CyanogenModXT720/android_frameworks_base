@@ -19,10 +19,14 @@ package com.android.internal.widget;
 import android.app.admin.DevicePolicyManager;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.database.Cursor;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.SystemClock;
 import android.provider.Settings;
+import android.provider.Calendar;
+import android.text.format.DateFormat;
+import java.text.SimpleDateFormat;
 import android.security.MessageDigest;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
@@ -38,6 +42,8 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Date;
+import java.util.TimeZone;
 import java.util.Arrays;
 import java.util.List;
 
@@ -694,6 +700,123 @@ public class LockPatternUtils {
             return null;
         }
         return nextAlarm;
+    }
+
+    /**
+     * @return A formatted string of the next calendar event with a reminder
+     * (for showing on the lock screen), or null if there is no next event
+     * within a certain look-ahead time.
+     */
+    public String getNextCalendarAlarm(long lookahead, String[] calendars, boolean remindersOnly) {
+        long now = System.currentTimeMillis();
+        long later = now + lookahead;
+
+        StringBuilder where = new StringBuilder();
+        if (remindersOnly) {
+            where.append(Calendar.EventsColumns.HAS_ALARM + "=1");
+        }
+        if (calendars != null && calendars.length > 0) {
+            if (remindersOnly) {
+                where.append(" AND ");
+            }
+            where.append(Calendar.EventsColumns.CALENDAR_ID + " in (");
+            for (int i = 0; i < calendars.length; i++) {
+                where.append(calendars[i]);
+                if (i != calendars.length - 1) {
+                    where.append(",");
+                }
+            }
+            where.append(") ");
+        }
+        String nextCalendarAlarm = null;
+        Cursor cursor = null;
+        try {
+            cursor = Calendar.Instances.query(mContentResolver, 
+                    new String[] {
+                        Calendar.EventsColumns.TITLE, 
+                        Calendar.EventsColumns.DTSTART,
+                        Calendar.EventsColumns.DESCRIPTION,
+                        Calendar.EventsColumns.EVENT_LOCATION,
+                        Calendar.EventsColumns.ALL_DAY,
+                    },
+                    now,
+                    later,
+                    where.toString(),
+                    null);
+            if (cursor.moveToFirst()) {
+                String  title       = cursor.getString(0);
+                Date    start       = new Date(cursor.getLong(1));
+                String  description = cursor.getString(2);
+                String  location    = cursor.getString(3);
+                boolean allDay      = cursor.getInt(4) != 0;
+
+                StringBuilder sb = new StringBuilder();
+                
+                if (allDay == true) {
+                    SimpleDateFormat sdf = new SimpleDateFormat(mContext.getString(R.string.abbrev_wday_month_day_no_year));
+                    // Calendar stores all-day events in UTC -- setting the timezone ensures
+                    // the correct date is shown.
+                    sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+                    sb.append(sdf.format(start));
+                } else {
+                    sb.append(DateFormat.format("E", start));
+                    sb.append(" ");
+                    sb.append(DateFormat.getTimeFormat(mContext).format(start));
+                }
+
+                sb.append(" ");
+                sb.append(title);
+
+                int showLocation = Settings.System.getInt(mContext.getContentResolver(),
+                            Settings.System.LOCKSCREEN_CALENDAR_SHOW_LOCATION, 0);
+
+                if (showLocation != 0 && !TextUtils.isEmpty(location)) {
+                    switch(showLocation) {
+                        case 1:
+                            // Show first line
+                            int end = location.indexOf('\n');
+                            if(end == -1) {
+                                sb.append("\n" + location);
+                            } else {
+                                sb.append("\n" + location.substring(0, end));
+                            }
+                            break;
+                        case 2:
+                            // Show all
+                            sb.append("\n" + location);
+                            break;
+                    }
+                }
+
+                int showDescription = Settings.System.getInt(mContext.getContentResolver(),
+                            Settings.System.LOCKSCREEN_CALENDAR_SHOW_DESCRIPTION, 0);
+
+                if (showDescription != 0 && !TextUtils.isEmpty(description)) {
+                    switch(showDescription) {
+                        case 1: 
+                           // Show first line
+                            int end = description.indexOf('\n');
+                            if(end == -1) {
+                                sb.append("\n" + description);
+                            } else {
+                                sb.append("\n" + description.substring(0, end));
+                            }
+                            break;
+                        case 2:
+                            // Show all
+                            sb.append("\n" + description);
+                            break;
+                    }
+                }
+
+                nextCalendarAlarm = sb.toString();
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return nextCalendarAlarm;
     }
 
     private boolean getBoolean(String secureSettingKey) {

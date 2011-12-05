@@ -329,6 +329,7 @@ public final class ActivityManagerService extends ActivityManagerNative implemen
     // been idle for less than 120 seconds.
     static final long EMPTY_APP_IDLE_OFFSET = 120*1000;
 	
+        static final boolean GMAPS_HACK;
 	static final String GMAPS_NLS = 
             "com.google.android.apps.maps/com.google.android.location.internal.server.NetworkLocationService";
     
@@ -363,6 +364,8 @@ public final class ActivityManagerService extends ActivityManagerNative implemen
             Integer.valueOf(SystemProperties.get("ro.HIDDEN_APP_MEM"))*PAGE_SIZE;
         EMPTY_APP_MEM =
             Integer.valueOf(SystemProperties.get("ro.EMPTY_APP_MEM"))*PAGE_SIZE;
+
+        GMAPS_HACK = Integer.valueOf(SystemProperties.get("persist.sys.gmaps_hack")) == 1;
     }
     
     static final int MY_PID = Process.myPid();
@@ -11221,7 +11224,7 @@ public final class ActivityManagerService extends ActivityManagerNative implemen
         //r.dump("  ");
 		
 		// don't start NetworkLocationService if Gmaps is not running
-		if (r.shortName.equals(GMAPS_NLS)
+		if (GMAPS_HACK && r.shortName.equals(GMAPS_NLS)
                 && getProcessRecordLocked("com.google.android.apps.maps",
                 r.appInfo.uid) == null) {
             return true;
@@ -11980,7 +11983,7 @@ public final class ActivityManagerService extends ActivityManagerNative implemen
                             // We are done with the associated start arguments.
                             r.findDeliveredStart(startId, true);
                             // stop Gmaps NetworkLocationService if killed
-                            if (r.shortName.equals(GMAPS_NLS)) {
+                            if (GMAPS_HACK && r.shortName.equals(GMAPS_NLS)) {
                                 r.stopIfKilled = true;
                             } else {
                                 r.stopIfKilled = false;
@@ -13987,7 +13990,7 @@ public final class ActivityManagerService extends ActivityManagerNative implemen
                         app.adjType = "started-bg-services";
                     }
 					// let the Gmaps NetworkLocationService die if Gmaps is not running
-					if (s.shortName.equals(GMAPS_NLS)
+					if (GMAPS_HACK && s.shortName.equals(GMAPS_NLS)
                             && getProcessRecordLocked("com.google.android.apps.maps",
                             s.appInfo.uid) == null) {
                         adj = hiddenAdj;
