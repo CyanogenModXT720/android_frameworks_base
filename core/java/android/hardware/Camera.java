@@ -920,8 +920,8 @@ public class Camera {
         private static final String KEY_JPEG_THUMBNAIL_WIDTH = "jpeg-thumbnail-width";
         private static final String KEY_JPEG_THUMBNAIL_HEIGHT = "jpeg-thumbnail-height";
         private static final String KEY_JPEG_THUMBNAIL_QUALITY = "jpeg-thumbnail-quality";
-        private static final String KEY_JPEG_QUALITY = "jpeg-quality";
-        private static final String KEY_ROTATION = "rotation";
+        private static final String KEY_JPEG_QUALITY = "image-quality";
+        private static final String KEY_ROTATION = "picture-rotation";
         private static final String KEY_GPS_LATITUDE = "gps-latitude";
         private static final String KEY_GPS_LONGITUDE = "gps-longitude";
         private static final String KEY_GPS_ALTITUDE = "gps-altitude";
