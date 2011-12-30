@@ -328,10 +328,14 @@ public final class ActivityManagerService extends ActivityManagerNative implemen
     // We put empty content processes after any hidden processes that have
     // been idle for less than 120 seconds.
     static final long EMPTY_APP_IDLE_OFFSET = 120*1000;
-	
-        static final boolean GMAPS_HACK;
-	static final String GMAPS_NLS = 
-            "com.google.android.apps.maps/com.google.android.location.internal.server.NetworkLocationService";
+
+    // Apps to be kept running, defined by sys.keep_app_1 & _2 properties
+    static final String KEEP_APP_1;
+    static final String KEEP_APP_2;
+
+    // Gmaps bg service ident
+    static final boolean GMAPS_HACK;
+    static final String GMAPS_NLS ="com.google.android.apps.maps/com.google.android.location.internal.server.NetworkLocationService";
     
     static {
         // These values are set in system/rootdir/init.rc on startup.
@@ -364,6 +368,9 @@ public final class ActivityManagerService extends ActivityManagerNative implemen
             Integer.valueOf(SystemProperties.get("ro.HIDDEN_APP_MEM"))*PAGE_SIZE;
         EMPTY_APP_MEM =
             Integer.valueOf(SystemProperties.get("ro.EMPTY_APP_MEM"))*PAGE_SIZE;
+
+        KEEP_APP_1 = SystemProperties.get("sys.keep_app_1", "0");
+        KEEP_APP_2 = SystemProperties.get("sys.keep_app_2", "0");
 
         GMAPS_HACK = Integer.valueOf(SystemProperties.get("persist.sys.gmaps_hack")) == 1;
     }
@@ -13872,6 +13879,11 @@ public final class ActivityManagerService extends ActivityManagerNative implemen
             adj = FOREGROUND_APP_ADJ;
             schedGroup = Process.THREAD_GROUP_DEFAULT;
             app.adjType = "mms";
+        } else if (KEEP_APP_1.equals(app.processName) || KEEP_APP_2.equals(app.processName)) {
+            // Custom apps to be kept running
+            adj = FOREGROUND_APP_ADJ;
+            schedGroup = Process.THREAD_GROUP_DEFAULT;
+            app.adjType = "foreground-service";
         } else if (app == TOP_APP) {
             // The last app on the list is the foreground app.
             adj = FOREGROUND_APP_ADJ;
