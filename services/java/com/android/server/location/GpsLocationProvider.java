@@ -197,8 +197,14 @@ public class GpsLocationProvider implements LocationProviderInterface {
 
     // flags to trigger NTP or XTRA data download when network becomes available
     // initialized to true so we do NTP and XTRA when the network comes up after booting
-    private boolean mInjectNtpTimePending = true;
-    private boolean mDownloadXtraDataPending = true;
+    private enum DownloadStates {
+        PendingNetwork, Downloading, Idle;
+    };
+    private DownloadStates mInjectNtpTimePending = DownloadStates.PendingNetwork;
+    private DownloadStates mDownloadXtraDataPending = DownloadStates.Idle;
+
+    // set to true if the GPS engine does not do on-demand NTP time requests
+    private boolean mPeriodicTimeInjection;
 
     // true if GPS is navigating
     private boolean mNavigating;
@@ -510,10 +516,10 @@ public class GpsLocationProvider implements LocationProviderInterface {
         }
 
         if (mNetworkAvailable) {
-            if (mInjectNtpTimePending) {
+            if (mInjectNtpTimePending == DownloadStates.PendingNetwork) {
                 sendMessage(INJECT_NTP_TIME, 0, null);
             }
-            if (mDownloadXtraDataPending) {
+            if (mDownloadXtraDataPending == DownloadStates.PendingNetwork) {
                 sendMessage(DOWNLOAD_XTRA_DATA, 0, null);
             }
         }
@@ -522,10 +528,10 @@ public class GpsLocationProvider implements LocationProviderInterface {
     private void handleInjectNtpTime() {
         if (!mNetworkAvailable) {
             // try again when network is up
-            mInjectNtpTimePending = true;
+            mInjectNtpTimePending = DownloadStates.PendingNetwork;
             return;
         }
-        mInjectNtpTimePending = false;
+        mInjectNtpTimePending = DownloadStates.Downloading;
 
         SntpClient client = new SntpClient();
         long delay;
@@ -549,19 +555,23 @@ public class GpsLocationProvider implements LocationProviderInterface {
             delay = RETRY_INTERVAL;
         }
 
-        // send delayed message for next NTP injection
-        // since this is delayed and not urgent we do not hold a wake lock here
-        mHandler.removeMessages(INJECT_NTP_TIME);
-        mHandler.sendMessageDelayed(Message.obtain(mHandler, INJECT_NTP_TIME), delay);
+        if (mPeriodicTimeInjection) {
+            // send delayed message for next NTP injection
+            // since this is delayed and not urgent we do not hold a wake lock here
+            mHandler.removeMessages(INJECT_NTP_TIME);
+            mHandler.sendMessageDelayed(Message.obtain(mHandler, INJECT_NTP_TIME), delay);
+        }
+
+        mInjectNtpTimePending = DownloadStates.Idle;
     }
 
     private void handleDownloadXtraData() {
         if (!mNetworkAvailable) {
             // try again when network is up
-            mDownloadXtraDataPending = true;
+            mDownloadXtraDataPending = DownloadStates.PendingNetwork;
             return;
         }
-        mDownloadXtraDataPending = false;
+        mDownloadXtraDataPending = DownloadStates.Downloading;
 
 
         GpsXtraDownloader xtraDownloader = new GpsXtraDownloader(mContext, mProperties);
@@ -577,6 +587,7 @@ public class GpsLocationProvider implements LocationProviderInterface {
             mHandler.removeMessages(DOWNLOAD_XTRA_DATA);
             mHandler.sendMessageDelayed(Message.obtain(mHandler, DOWNLOAD_XTRA_DATA), RETRY_INTERVAL);
         }
+        mDownloadXtraDataPending = DownloadStates.Idle;
     }
 
     /**
@@ -1508,11 +1519,23 @@ public class GpsLocationProvider implements LocationProviderInterface {
                     handleUpdateNetworkState(msg.arg1, (NetworkInfo)msg.obj);
                     break;
                 case INJECT_NTP_TIME:
-                    handleInjectNtpTime();
+                    if (mInjectNtpTimePending != DownloadStates.Downloading) {
+                        new Thread(new Runnable() {
+                            public void run() {
+                                handleInjectNtpTime();
+                            }
+                        }).run();
+                    }
                     break;
                 case DOWNLOAD_XTRA_DATA:
-                    if (mSupportsXtra) {
-                        handleDownloadXtraData();
+                    if (mDownloadXtraDataPending != DownloadStates.Downloading) {
+                        if (mSupportsXtra) {
+                            new Thread(new Runnable() {
+                                public void run() {
+                                    handleDownloadXtraData();
+                                }
+                            }).run();
+                        }
                     }
                     break;
                 case UPDATE_LOCATION:
