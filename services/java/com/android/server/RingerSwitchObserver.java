@@ -62,7 +62,7 @@ class RingerSwitchObserver extends UEventObserver {
         mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "RingerSwitchObserver");
         mWakeLock.setReferenceCounted(false);
 
-        startObserving(RINGER_SWITCH_UEVENT_MATCH);
+       // startObserving(RINGER_SWITCH_UEVENT_MATCH);
 
         init();  // set initial status
     }

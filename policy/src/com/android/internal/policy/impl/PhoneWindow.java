@@ -169,6 +169,7 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
     private SearchManager mSearchManager = null;
 
     private TelephonyManager mTelephonyManager = null;
+/* based on decompiled android.policy.jar */ 
 
     public PhoneWindow(Context context) {
         super(context);
@@ -1214,6 +1215,13 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
                 getContext().sendOrderedBroadcast(intent, null);
                 return true;
             }
+
+	    case KeyEvent.KEYCODE_MEDIA_MODE: {
+		Intent intent = new Intent(Intent.ACTION_MEDIA_MODE_BUTTON, null);
+		Intent.putExtra(Intent.EXTRA_KEY_EVENT, event); 
+		getContext().sendOrderedBroadcast(intent, null);
+		return true;
+		}
 
             case KeyEvent.KEYCODE_CAMERA: {
                 if (getKeyguardManager().inKeyguardRestrictedInputMode()
