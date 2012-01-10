@@ -1218,7 +1218,7 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
 
 	    case KeyEvent.KEYCODE_MEDIA_MODE: {
 		Intent intent = new Intent(Intent.ACTION_MEDIA_MODE_BUTTON, null);
-		Intent.putExtra(Intent.EXTRA_KEY_EVENT, event); 
+		intent.putExtra(Intent.EXTRA_KEY_EVENT, event); 
 		getContext().sendOrderedBroadcast(intent, null);
 		return true;
 		}
