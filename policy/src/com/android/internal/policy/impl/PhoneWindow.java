@@ -1168,8 +1168,8 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
     protected boolean onKeyDown(int featureId, int keyCode, KeyEvent event) {
         final KeyEvent.DispatcherState dispatcher =
                 mDecor != null ? mDecor.getKeyDispatcherState() : null;
-        //Log.i(TAG, "Key down: repeat=" + event.getRepeatCount()
-        //        + " flags=0x" + Integer.toHexString(event.getFlags()));
+        Log.i(TAG, "Key down: " + keyCode +" event: " + event + "repeat=" + event.getRepeatCount()
+                + " flags=0x" + Integer.toHexString(event.getFlags()));
         
         switch (keyCode) {
             case KeyEvent.KEYCODE_VOLUME_UP:
