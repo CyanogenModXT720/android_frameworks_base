@@ -1216,13 +1216,13 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
                 return true;
             }
 
-	    case KeyEvent.KEYCODE_MEDIA_MODE: {
+/*	    case KeyEvent.KEYCODE_MEDIA_MODE: {
 		Intent intent = new Intent(Intent.ACTION_MEDIA_MODE_BUTTON, null);
 		intent.putExtra(Intent.EXTRA_KEY_EVENT, event); 
 		getContext().sendOrderedBroadcast(intent, null);
 		return true;
 		}
-
+*/
             case KeyEvent.KEYCODE_CAMERA: {
                 if (getKeyguardManager().inKeyguardRestrictedInputMode()
                         || dispatcher == null) {
@@ -1387,7 +1387,12 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
                         event);
                 return true;
             }
-
+	    case KeyEvent.KEYCODE_MEDIA_MODE: {
+		Intent intent = new Intent(Intent.ACTION_MEDIA_MODE_BUTTON, null);
+		intent.putExtra(Intent.EXTRA_KEY_EVENT, event); 
+		getContext().sendOrderedBroadcast(intent, null);
+		return true;
+		}
             case KeyEvent.KEYCODE_BACK: {
                 if (featureId < 0) break;
                 if (event.isTracking() && !event.isCanceled()) {
