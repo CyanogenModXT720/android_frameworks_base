@@ -170,6 +170,7 @@ public:
     // the best.
     // Example value: "90". Read/write.
     static const char KEY_JPEG_QUALITY[];
+    static const char KEY_IMAGE_QUALITY[];
     // The rotation angle in degrees relative to the orientation of the camera.
     // This affects the pictures returned from CAMERA_MSG_COMPRESSED_IMAGE. The
     // camera driver may set orientation in the EXIF header without rotating the
