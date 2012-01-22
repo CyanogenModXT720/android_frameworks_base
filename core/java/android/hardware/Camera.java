@@ -1039,8 +1039,9 @@ public class Camera {
         private static final String KEY_JPEG_THUMBNAIL_SIZE = "jpeg-thumbnail-size";
         private static final String KEY_JPEG_THUMBNAIL_WIDTH = "jpeg-thumbnail-width";
         private static final String KEY_JPEG_THUMBNAIL_HEIGHT = "jpeg-thumbnail-height";
-        private static final String KEY_JPEG_THUMBNAIL_QUALITY = "jpeg-thumbnail-quality";
-        private static final String KEY_JPEG_QUALITY = "image-quality";
+        private static final String KEY_JPEG_THUMBNAIL_QUALITY = "jpeg-quality";
+        private static final String KEY_JPEG_QUALITY = "jpeg-quality";
+        private static final String KEY_IMAGE_QUALITY = "image-quality";
         private static final String KEY_ROTATION = "picture-rotation";
         private static final String KEY_GPS_LATITUDE = "gps-latitude";
         private static final String KEY_GPS_LONGITUDE = "gps-longitude";
@@ -1282,7 +1283,7 @@ public class Camera {
          * focus, which is usually at hyperfocal distance. Applications should
          * not call {@link #autoFocus(AutoFocusCallback)} in this mode.
          */
-        public static final String FOCUS_MODE_FIXED = "fixed";
+        public static final String FOCUS_MODE_FIXED = "off";
 
         /**
          * Extended depth of field (EDOF). Focusing is done digitally and
@@ -1581,6 +1582,7 @@ public class Camera {
          */
         public void setJpegQuality(int quality) {
             set(KEY_JPEG_QUALITY, quality);
+            set(KEY_IMAGE_QUALITY, quality);
         }
 
         /**
