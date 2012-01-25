@@ -148,5 +148,7 @@
             file="/system/framework/android.test.runner.jar" />
     <library name="javax.obex"
             file="/system/framework/javax.obex.jar"/>
+    <library name="com.motorola.aui" 
+            file="/system/framework/com.motorola.aui.jar"/>
 
 </permissions>
