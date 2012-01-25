@@ -157,5 +157,6 @@
             file="/system/framework/javax.obex.jar"/>
     <library name="com.motorola.aui" 
             file="/system/framework/com.motorola.aui.jar"/>
-
+    <library name="com.motorola.android.camera"
+    	    file="/system/framework/com.motorola.android.camera.jar"/>
 </permissions>
