@@ -124,6 +124,7 @@ public class Camera {
     private static final int CAMERA_MSG_POSTVIEW_FRAME   = 0x040;
     private static final int CAMERA_MSG_RAW_IMAGE        = 0x080;
     private static final int CAMERA_MSG_COMPRESSED_IMAGE = 0x100;
+    private static final int CAMERA_MSG_FACE_DETECTION   = 0x200;
     private static final int CAMERA_MSG_ALL_MSGS         = 0x1FF;
 
     private int mNativeContext; // accessed by native methods
@@ -133,6 +134,7 @@ public class Camera {
     private PictureCallback mJpegCallback;
     private PreviewCallback mPreviewCallback;
     private PictureCallback mPostviewCallback;
+    private FaceDetectCallback mFaceDetectCallback;
     private AutoFocusCallback mAutoFocusCallback;
     private OnZoomChangeListener mZoomListener;
     private ErrorCallback mErrorCallback;
@@ -181,6 +183,7 @@ public class Camera {
         mPreviewCallback = null;
         mPostviewCallback = null;
         mZoomListener = null;
+        mFaceDetectCallback = null;
 
         Looper looper;
         if ((looper = Looper.myLooper()) != null) {
@@ -509,6 +512,12 @@ public class Camera {
                 }
                 return;
 
+            case CAMERA_MSG_FACE_DETECTION:
+		if (mFaceDetectCallback != null) {
+		    mFaceDetectCallback.onFaceDetectUpdate(mCamera);
+		}
+		return;
+
             default:
                 Log.e(TAG, "Unknown message type " + msg.what);
                 return;
@@ -616,6 +625,11 @@ public class Camera {
          * is available.
          */
         void onShutter();
+    }
+
+    public interface FaceDetectCallback
+    {
+	void onFaceDetectUpdate(Camera camera);
     }
 
     /**
@@ -801,6 +815,11 @@ public class Camera {
     public final void setErrorCallback(ErrorCallback cb)
     {
         mErrorCallback = cb;
+    }
+
+    public final void setFaceDetectCallback(FaceDetectCallback cb)
+    {
+        mFaceDetectCallback = cb;
     }
 
     private native final void native_setParameters(String params);
