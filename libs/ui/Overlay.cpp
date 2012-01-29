@@ -15,15 +15,16 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "ui"
 #include <binder/IMemory.h>
 #include <binder/Parcel.h>
 #include <utils/Errors.h>
 #include <binder/MemoryHeapBase.h>
-
+#include <utils/Log.h>
 #include <ui/IOverlay.h>
 #include <ui/Overlay.h>
-
 #include <hardware/overlay.h>
+
 
 namespace android {
 
@@ -101,12 +102,14 @@ status_t Overlay::setFd(int fd)
 int32_t Overlay::getBufferCount() const
 {
     if (mStatus != NO_ERROR) return mStatus;
+    LOGE("Buffer count value: %d ", mOverlayData->getBufferCount(mOverlayData));
     return mOverlayData->getBufferCount(mOverlayData);
 }
 
 void* Overlay::getBufferAddress(overlay_buffer_t buffer)
 {
     if (mStatus != NO_ERROR) return NULL;
+    LOGE("Buffer address value: %d ", mOverlayData->getBufferAddress(mOverlayData, buffer));
     return mOverlayData->getBufferAddress(mOverlayData, buffer);
 }
 
