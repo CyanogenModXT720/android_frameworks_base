@@ -265,7 +265,7 @@ public class KeyEvent extends InputEvent implements Parcelable {
     /** Key code constant: Mute key. */
     public static final int KEYCODE_MUTE            = 91;
     /** Key code constant: Page Up key. */
-    public static final int KEYCODE_PAGE_UP         = 92;
+    public static final int KEYCODE_MEDIA_MODE         = 92;
     /** Key code constant: Page Down key. */
     public static final int KEYCODE_PAGE_DOWN       = 93;
     /** Key code constant: Picture Symbols modifier key.
