@@ -18,6 +18,7 @@ package com.android.internal.policy.impl;
 
 import com.android.internal.R;
 import com.android.internal.telephony.IccCard;
+import com.android.internal.telephony.TelephonyProperties;
 import com.android.internal.widget.DigitalClock;
 import com.android.internal.widget.LockPatternUtils;
 import com.android.internal.widget.RotarySelector;
@@ -34,6 +35,7 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.content.res.ColorStateList;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -94,6 +96,10 @@ class LockScreen extends LinearLayout implements KeyguardScreen, KeyguardUpdateM
     private static final String TAG = "LockScreen";
     private static final String ENABLE_MENU_KEY_FILE = "/data/local/enable_menu_key";
     private static final Uri sArtworkUri = Uri.parse("content://media/external/audio/albumart");
+    static final int CARRIER_TYPE_DEFAULT = 0;
+    static final int CARRIER_TYPE_SPN = 1;
+    static final int CARRIER_TYPE_PLMN = 2;
+    static final int CARRIER_TYPE_CUSTOM = 3;
 
     private Status mStatus = Status.Normal;
 
@@ -227,6 +233,12 @@ class LockScreen extends LinearLayout implements KeyguardScreen, KeyguardUpdateM
 
     private boolean mRotaryHideArrows = (Settings.System.getInt(mContext.getContentResolver(),
             Settings.System.LOCKSCREEN_ROTARY_HIDE_ARROWS, 0) == 1);
+
+    private int mCarrierLabelType = (Settings.System.getInt(mContext.getContentResolver(),
+            Settings.System.CARRIER_LABEL_TYPE, CARRIER_TYPE_DEFAULT));
+
+    private String mCarrierLabelCustom = (Settings.System.getString(mContext.getContentResolver(),
+            Settings.System.CARRIER_LABEL_CUSTOM_STRING));
 
     private boolean mUseRotaryLockscreen =
         LockscreenStyle.getStyleById(mLockscreenStyle) == LockscreenStyle.Rotary;
@@ -569,6 +581,14 @@ class LockScreen extends LinearLayout implements KeyguardScreen, KeyguardUpdateM
                 resCustom = R.drawable.ic_jog_dial_holo_custom;
                 resTarget = R.drawable.jog_tab_target_holo;
                 break;
+            case Blade:
+                resSecNorm = R.drawable.jog_ring_blade_secback_normal;
+                resRingGreen = R.drawable.jog_ring_blade_ring_green;
+                resRingHighlight = R.drawable.jog_ring_blade_ring_pressed_red;
+                resUnlock = R.drawable.ic_jog_dial_unlock;
+                resCustom = R.drawable.ic_jog_dial_custom;
+                resTarget = R.drawable.jog_tab_target_green;
+                break;
             default:
                 resSecNorm = R.drawable.jog_ring_secback_normal;
                 resRingGreen = R.drawable.jog_ring_ring_green;
@@ -718,13 +738,15 @@ class LockScreen extends LinearLayout implements KeyguardScreen, KeyguardUpdateM
         }
 
         resetStatusInfo(updateMonitor);
-        switch (mWidgetLayout) {
-            case 2:
-                centerWidgets();
-                break;
-            case 3:
-                alignWidgetsToRight();
-                break;
+        if (mCreationOrientation != Configuration.ORIENTATION_LANDSCAPE) {
+            switch (mWidgetLayout) {
+                case 2:
+                    centerWidgets();
+                    break;
+                case 3:
+                    alignWidgetsToRight();
+                    break;
+            }
         }
     }
 
@@ -825,13 +847,6 @@ class LockScreen extends LinearLayout implements KeyguardScreen, KeyguardUpdateM
                 : R.drawable.jog_tab_target_gray;
 
         //Ringlock resource setup
-        int mRinglockStyle = Settings.System.getInt(mContext.getContentResolver(),
-                Settings.System.RINGLOCK_STYLE_PREF, RinglockStyle.getIdByStyle(RinglockStyle.Bubble));
-        int resRingGray=(mRinglockStyle == RinglockStyle.getIdByStyle(RinglockStyle.Bubble) ?
-                R.drawable.jog_ring_ring_gray : R.drawable.jog_ring_rev_ring_gray);
-        int resRingYellow=(mRinglockStyle == RinglockStyle.getIdByStyle(RinglockStyle.Bubble) ?
-                R.drawable.jog_ring_ring_yellow : R.drawable.jog_ring_rev_ring_yellow);
-
         mRotarySelector.setRightHandleResource(iconId);
 
         mTabSelector.setRightTabResources(iconId, targetId,
@@ -861,6 +876,10 @@ class LockScreen extends LinearLayout implements KeyguardScreen, KeyguardUpdateM
                 } else {
                     iconId = R.drawable.ic_jog_dial_holo_sound_on;
                 }
+                break;
+            case Blade:
+                ringResource = mSilentMode ? R.drawable.jog_ring_blade_ring_yellow :
+                                             R.drawable.jog_ring_blade_ring_gray;
                 break;
             default:
                 ringResource = mSilentMode ? R.drawable.jog_ring_ring_yellow :
@@ -987,7 +1006,7 @@ class LockScreen extends LinearLayout implements KeyguardScreen, KeyguardUpdateM
         // Don't poke the wake lock when returning to a state where the handle is
         // not grabbed since that can happen when the system (instead of the user)
         // cancels the grab.
-        if (grabbedState != 0) {
+        if (grabbedState != SlidingTab.OnTriggerListener.NO_HANDLE) {
             mGestureOverlay.cancelGesture();
             mCallback.pokeWakelock();
         } else if (mUseRingLockscreen && mCallback != null) {
@@ -1251,13 +1270,19 @@ class LockScreen extends LinearLayout implements KeyguardScreen, KeyguardUpdateM
 
         mEmergencyCallButton.setVisibility(View.GONE); // in almost all cases
 
+        String realPlmn = SystemProperties.get(TelephonyProperties.PROPERTY_OPERATOR_ALPHA);
+        String plmn = (String) mUpdateMonitor.getTelephonyPlmn();
+        String spn = (String) mUpdateMonitor.getTelephonySpn();
+
         switch (status) {
             case Normal:
                 // text
-                mCarrier.setText(
-                        getCarrierString(
-                                mUpdateMonitor.getTelephonyPlmn(),
-                                mUpdateMonitor.getTelephonySpn()));
+                if (plmn == null || plmn.equals(realPlmn)) {
+                    mCarrier.setText(getCarrierString(
+                            plmn, spn, mCarrierLabelType, mCarrierLabelCustom));
+                } else {
+                    mCarrier.setText(getCarrierString(plmn, spn));
+                }
 
                 // Empty now, but used for sliding tab feedback
                 mScreenLocked.setText("");
@@ -1377,16 +1402,37 @@ class LockScreen extends LinearLayout implements KeyguardScreen, KeyguardUpdateM
     }
 
     static CharSequence getCarrierString(CharSequence telephonyPlmn, CharSequence telephonySpn) {
-        if (telephonyPlmn != null && (telephonySpn == null || "".contentEquals(telephonySpn))) {
-            return telephonyPlmn;
-        } else if (telephonySpn != null && (telephonyPlmn == null || "".contentEquals(telephonyPlmn))) {
-            return telephonySpn;
-        } else if (telephonyPlmn != null && telephonySpn != null) {
-            return telephonyPlmn + "|" + telephonySpn;
-        } else {
-            return "";
-        }
+        return getCarrierString(telephonyPlmn, telephonySpn, CARRIER_TYPE_DEFAULT, "");
     }
+
+    static CharSequence getCarrierString(CharSequence telephonyPlmn, CharSequence telephonySpn,
+            int carrierLabelType, String carrierLabelCustom) {
+        switch (carrierLabelType) {
+            default:
+            case CARRIER_TYPE_DEFAULT:
+                if (telephonyPlmn != null && TextUtils.isEmpty(telephonySpn)) {
+                    return telephonyPlmn;
+                } else if (telephonySpn != null && TextUtils.isEmpty(telephonyPlmn)) {
+                    return telephonySpn;
+                } else if (telephonyPlmn != null && telephonySpn != null) {
+                    return telephonyPlmn + "|" + telephonySpn;
+                }
+                return "";
+            case CARRIER_TYPE_SPN:
+                if (telephonySpn != null) {
+                    return telephonySpn;
+                 }
+                 break;
+            case CARRIER_TYPE_PLMN:
+                if (telephonyPlmn != null) {
+                    return telephonyPlmn;
+                }
+                break;
+            case CARRIER_TYPE_CUSTOM:
+                return carrierLabelCustom;
+         }
+         return "";
+     }
 
     public void onSimStateChanged(IccCard.State simState) {
         if (DBG) Log.d(TAG, "onSimStateChanged(" + simState + ")");

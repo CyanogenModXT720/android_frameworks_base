@@ -1204,6 +1204,12 @@ public final class Settings {
         public static final String AIRPLANE_MODE_TOGGLEABLE_RADIOS = "airplane_mode_toggleable_radios";
 
         /**
+         * Whether Bluetooth fast connections are enabled.
+         * @hide
+         */
+        public static final String BLUETOOTH_FAST_CONNECT = "bluetooth_fast_connect";
+
+        /**
          * The policy for deciding when Wi-Fi should go to sleep (which will in
          * turn switch to using the mobile data as an Internet connection).
          * <p>
@@ -1660,6 +1666,13 @@ public final class Settings {
          * @hide
          */
         public static final String VIBRATE_IN_CALL = "vibrate-in-call";
+
+        /**
+         * Whether pressing the volume buttons should play a beep sound.
+         *
+         * @hide
+         */
+        public static final String VOLUME_KEY_BEEPS = "volume-key-beeps";
 
         /**
          * The mapping of stream type (integer) to its setting.
@@ -2259,6 +2272,23 @@ public final class Settings {
         public static final String LOCK_MMS_IN_MEMORY = "lock_mms_in_memory";
 
         /**
+         * What text to show as carrier label
+         * 0: use system default
+         * 1: show spn
+         * 2: show plmn
+         * 3: show custom string
+         * default: 0
+         * @hide
+         */
+        public static final String CARRIER_LABEL_TYPE = "carrier_label_type";
+
+        /**
+         * The custom string to show as carrier label
+         * @hide
+         */
+        public static final String CARRIER_LABEL_CUSTOM_STRING = "carrier_label_custom_string";
+
+        /**
          * Display style of AM/PM next to clock in status bar
          * 0: Normal display (Eclair stock)
          * 1: Small display (Froyo stock)
@@ -2473,13 +2503,6 @@ public final class Settings {
          * @hide
          */
         public static final String STATUS_BAR_BRIGHTNESS_TOGGLE = "status_bar_brightness_toggle";
-
-        /**
-         * Whether to force PLMN display for SPDI networks
-         *
-         * @hide
-         */
-        public static final String STATUS_BAR_FORCE_PLMN_DISPLAY = "status_bar_force_plmn_display";
 
         /**
          * Whether to display headset icon on status bar when headset is plugged in
