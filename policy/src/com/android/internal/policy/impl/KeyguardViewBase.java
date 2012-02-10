@@ -160,6 +160,7 @@ public abstract class KeyguardViewBase extends FrameLayout {
                         return true;  // suppress key event
                     }
                 case KeyEvent.KEYCODE_HEADSETHOOK: 
+                case KeyEvent.KEYCODE_MEDIA_MODE: 
                 case KeyEvent.KEYCODE_MEDIA_STOP: 
                 case KeyEvent.KEYCODE_MEDIA_NEXT: 
                 case KeyEvent.KEYCODE_MEDIA_PREVIOUS: 
@@ -196,6 +197,7 @@ public abstract class KeyguardViewBase extends FrameLayout {
             switch (keyCode) {
                 case KeyEvent.KEYCODE_MUTE:
                 case KeyEvent.KEYCODE_HEADSETHOOK: 
+                case KeyEvent.KEYCODE_MEDIA_MODE: 
                 case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE: 
                 case KeyEvent.KEYCODE_MEDIA_STOP: 
                 case KeyEvent.KEYCODE_MEDIA_NEXT: 

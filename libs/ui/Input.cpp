@@ -36,6 +36,7 @@ bool KeyEvent::hasDefaultAction(int32_t keyCode) {
         case AKEYCODE_POWER:
         case AKEYCODE_CAMERA:
         case AKEYCODE_HEADSETHOOK:
+        case AKEYCODE_MEDIA_MODE:
         case AKEYCODE_MENU:
         case AKEYCODE_NOTIFICATION:
         case AKEYCODE_FOCUS:
@@ -70,6 +71,7 @@ bool KeyEvent::isSystemKey(int32_t keyCode) {
         case AKEYCODE_MUTE:
         case AKEYCODE_POWER:
         case AKEYCODE_HEADSETHOOK:
+	case AKEYCODE_MEDIA_MODE:
         case AKEYCODE_MEDIA_PLAY_PAUSE:
         case AKEYCODE_MEDIA_STOP:
         case AKEYCODE_MEDIA_NEXT:

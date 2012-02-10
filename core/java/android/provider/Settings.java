@@ -2937,6 +2937,8 @@ public final class Settings {
          * @hide
          */
         public static final String CAMBTN_MUSIC_CONTROLS = "cambtn_music_controls";
+        
+   	public static final String MEDBTN_MUSIC_CONTROLS = "medbtn_music_controls";
 
         /**
          * Whether the phone goggles mode is enabled or not.

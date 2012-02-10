@@ -316,6 +316,8 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     boolean mVolBtnMusicControls;
     // Behavior of cambtn music controls
     boolean mCamBtnMusicControls;
+
+    boolean mMedBtnMusicControls;
     // keeps track of long press state
     boolean mIsLongPress;
     // keeps track of headset button repeat count
@@ -365,6 +367,8 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                     Settings.System.VOLBTN_MUSIC_CONTROLS), false, this);
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.CAMBTN_MUSIC_CONTROLS), false, this);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.MEDBTN_MUSIC_CONTROLS), false, this);
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.STATUS_BAR_BOTTOM), false, this);
             updateSettings();
@@ -801,6 +805,8 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                     Settings.System.VOLBTN_MUSIC_CONTROLS, 1) == 1);
             mCamBtnMusicControls = (Settings.System.getInt(resolver,
                     Settings.System.CAMBTN_MUSIC_CONTROLS, 0) == 1);
+            mMedBtnMusicControls = (Settings.System.getInt(resolver,
+                    Settings.System.MEDBTN_MUSIC_CONTROLS, 0) == 1);
             int defValue=(CmSystem.getDefaultBool(mContext, CmSystem.CM_DEFAULT_BOTTOM_STATUS_BAR) ? 1 : 0);
             mBottomBar = (Settings.System.getInt(resolver,
                     Settings.System.STATUS_BAR_BOTTOM, defValue) == 1);
@@ -2269,6 +2275,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             }
 
             case KeyEvent.KEYCODE_HEADSETHOOK:
+            case KeyEvent.KEYCODE_MEDIA_MODE:
             case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
             case KeyEvent.KEYCODE_MEDIA_STOP:
             case KeyEvent.KEYCODE_MEDIA_NEXT:
@@ -2286,7 +2293,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                     mHandler.post(new PassHeadsetKey(keyEvent));
                 }
 
-                if (keyCode == KeyEvent.KEYCODE_HEADSETHOOK) {
+                if (keyCode == KeyEvent.KEYCODE_HEADSETHOOK || keyCode == KeyEvent.KEYCODE_MEDIA_MODE) {
                     if (!down) {
                         mHandler.removeCallbacks(mHsetHookLongPress);
                     }

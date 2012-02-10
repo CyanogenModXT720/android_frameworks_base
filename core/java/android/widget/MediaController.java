@@ -415,6 +415,7 @@ public class MediaController extends FrameLayout {
         int keyCode = event.getKeyCode();
         if (event.getRepeatCount() == 0 && event.isDown() && (
                 keyCode ==  KeyEvent.KEYCODE_HEADSETHOOK ||
+                keyCode ==  KeyEvent.KEYCODE_MEDIA_MODE ||
                 keyCode ==  KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE ||
                 keyCode ==  KeyEvent.KEYCODE_SPACE)) {
             doPauseResume();
