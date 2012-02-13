@@ -1159,6 +1159,15 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
     public boolean superDispatchTrackballEvent(MotionEvent event) {
         return mDecor.superDispatchTrackballEvent(event);
     }
+    private boolean isFmRadioRunning() {
+    ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+    for (RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+        if ("motoroal.IFMRadioStackService".equals(service.service.getClassName())) {
+            return true;
+        }
+    }
+    return false;
+    }
 
     /**
      * A key was pressed down and not handled by anything else in the window.
@@ -1174,7 +1183,19 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
         
         switch (keyCode) {
             case KeyEvent.KEYCODE_VOLUME_UP:
+		if (isFmRadioRunning) {
+			Runtime.exec(am broadcast -a com.motorola.fmradio.volume.change --ei type 2) 
+			return true; 
+			break; 
+		}	
             case KeyEvent.KEYCODE_VOLUME_DOWN: {
+		if (isFmRadioRunning) 
+		{
+                        Runtime.exec(am broadcast -a com.motorola.fmradio.volume.change --ei type 0)
+                        return true; 
+
+		}
+		else {
                 AudioManager audioManager = (AudioManager) getContext().getSystemService(
                         Context.AUDIO_SERVICE);
                 if (audioManager != null) {
@@ -1201,7 +1222,7 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
                 }
                 return true;
             }
-
+		}
 
             case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
                 /* Suppress PLAYPAUSE toggle when phone is ringing or in-call
@@ -1412,7 +1433,20 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
         
         switch (keyCode) {
             case KeyEvent.KEYCODE_VOLUME_UP:
+		  if (isFmRadioRunning) {
+                        Runtime.exec(am broadcast -a com.motorola.fmradio.volume.change --ei type 3)
+                        return true;
+                        break;
+                }
+
             case KeyEvent.KEYCODE_VOLUME_DOWN: {
+
+	               if (isFmRadioRunning) {
+                        Runtime.exec(am broadcast -a com.motorola.fmradio.volume.change --ei type 1)
+                        return true;
+                        break;
+			}
+		else { 
                 if (!event.isCanceled()) {
                     AudioManager audioManager = (AudioManager) getContext().getSystemService(
                             Context.AUDIO_SERVICE);
@@ -1430,7 +1464,7 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
                 }
                 return true;
             }
-
+		}
             case KeyEvent.KEYCODE_MENU: {
                 onKeyUpPanel(featureId < 0 ? FEATURE_OPTIONS_PANEL : featureId,
                         event);
