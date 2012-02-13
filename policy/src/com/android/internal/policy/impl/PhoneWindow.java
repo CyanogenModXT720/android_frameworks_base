@@ -33,6 +33,8 @@ import com.android.internal.view.menu.SubMenuBuilder;
 
 import android.app.KeyguardManager;
 import android.app.SearchManager;
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningServiceInfo;
 import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -1160,14 +1162,14 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
         return mDecor.superDispatchTrackballEvent(event);
     }
     private boolean isFmRadioRunning() {
-    ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-    for (RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-        if ("motoroal.IFMRadioStackService".equals(service.service.getClassName())) {
-            return true;
-        }
-    }
-    return false;
-    }
+		ActivityManager manager = (ActivityManager) getContext().getSystemService(Context.ACTIVITY_SERVICE);
+		for (RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+			if ("com.motorola.fmradio.FMRadioPlayerService".equals(service.service.getClassName())) {
+				return true;
+			}
+		}
+		return false;
+	}
 
     /**
      * A key was pressed down and not handled by anything else in the window.
@@ -1182,17 +1184,21 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
                 + " flags=0x" + Integer.toHexString(event.getFlags()));
         
         switch (keyCode) {
-            case KeyEvent.KEYCODE_VOLUME_UP:
-		if (isFmRadioRunning) {
-			Runtime.exec(am broadcast -a com.motorola.fmradio.volume.change --ei type 2) 
+            case KeyEvent.KEYCODE_VOLUME_UP: {
+		if (isFmRadioRunning()) {
+			try {
+			 Runtime.getRuntime().exec("am broadcast -a com.motorola.fmradio.volume.change --ei type 2");
 			return true; 
-			break; 
+} catch (Exception e) { e.printStackTrace(); } 
 		}	
+		}
             case KeyEvent.KEYCODE_VOLUME_DOWN: {
-		if (isFmRadioRunning) 
+		if (isFmRadioRunning()) 
 		{
-                        Runtime.exec(am broadcast -a com.motorola.fmradio.volume.change --ei type 0)
-                        return true; 
+			try {
+			Runtime.getRuntime().exec("am broadcast -a com.motorola.fmradio.volume.change --ei type 0");
+			return true; 
+} catch (Exception e) { e.printStackTrace(); }
 
 		}
 		else {
@@ -1432,20 +1438,24 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
         //        + " flags=0x" + Integer.toHexString(event.getFlags()));
         
         switch (keyCode) {
-            case KeyEvent.KEYCODE_VOLUME_UP:
-		  if (isFmRadioRunning) {
-                        Runtime.exec(am broadcast -a com.motorola.fmradio.volume.change --ei type 3)
-                        return true;
-                        break;
-                }
+            case KeyEvent.KEYCODE_VOLUME_UP: {
+				if (isFmRadioRunning()) {
+					try {
+					Runtime.getRuntime().exec("am broadcast -a com.motorola.fmradio.volume.change --ei type 3");
+					return true;
+} catch (Exception e) { e.printStackTrace(); }
 
-            case KeyEvent.KEYCODE_VOLUME_DOWN: {
-
-	               if (isFmRadioRunning) {
-                        Runtime.exec(am broadcast -a com.motorola.fmradio.volume.change --ei type 1)
-                        return true;
-                        break;
+				}
 			}
+            case KeyEvent.KEYCODE_VOLUME_DOWN: {
+				if (isFmRadioRunning()) 
+{
+try {
+					Runtime.getRuntime().exec("am broadcast -a com.motorola.fmradio.volume.change --ei type 1");
+					return true;
+} catch (Exception e) { e.printStackTrace(); }
+
+				}
 		else { 
                 if (!event.isCanceled()) {
                     AudioManager audioManager = (AudioManager) getContext().getSystemService(
