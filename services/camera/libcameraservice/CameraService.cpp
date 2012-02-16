@@ -765,8 +765,8 @@ status_t CameraService::Client::setOverlay() {
     //for 720p recording , preview can be 800X448
     if(w == preview_sizes[0].width && h==preview_sizes[0].height){
         LOGD("Changing overlay dimensions to 768X432 for 720p recording.");
-        w = preview_sizes[1].width;
-        h = preview_sizes[1].height;
+        w = preview_sizes[0].width;
+        h = preview_sizes[0].height;
     }
 #endif
 
