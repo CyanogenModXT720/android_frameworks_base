@@ -217,7 +217,11 @@ public:
      * Set the camera parameters. This returns BAD_VALUE if any parameter is
      * invalid or not supported. */
     virtual status_t    setParameters(const CameraParameters& params) = 0;
-
+    
+#ifdef MOTO_CUSTOM_PARAMETERS
+    virtual status_t    setCustomParameters(const CameraParameters& params) = 0;
+    virtual CameraParameters    getCustomParameters() const = 0;
+#endif
     /** Return the camera parameters. */
     virtual CameraParameters  getParameters() const = 0;
 
