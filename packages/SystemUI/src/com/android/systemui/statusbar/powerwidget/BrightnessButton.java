@@ -27,15 +27,17 @@ public class BrightnessButton extends PowerButton {
      * Minimum and maximum brightnesses. Don't go to 0 since that makes the
      * display unusable
      */
-    private static final int MIN_BACKLIGHT = Power.BRIGHTNESS_DIM + 10;
+//    private static final int MIN_BACKLIGHT = Power.BRIGHTNESS_DIM + 10; // e.g. 20 + 10
+    private static final int MIN_BACKLIGHT = Power.BRIGHTNESS_DIM ; // e.g. 20 + 10
     private static final int MAX_BACKLIGHT = Power.BRIGHTNESS_ON;
 
     // Auto-backlight level
     private static final int AUTO_BACKLIGHT = -1;
     // Mid-range brightness values + thresholds
-    private static final int LOW_BACKLIGHT = (int) (MAX_BACKLIGHT * 0.25f);
-    private static final int MID_BACKLIGHT = (int) (MAX_BACKLIGHT * 0.5f);
-    private static final int HIGH_BACKLIGHT = (int) (MAX_BACKLIGHT * 0.75f);
+    //private static final int LOW_BACKLIGHT = (int) (MAX_BACKLIGHT * 0.25f); // 255/4
+    private static final int LOW_BACKLIGHT = (int) (MAX_BACKLIGHT * 0.10f); // 255 *.10
+    private static final int MID_BACKLIGHT = (int) (MAX_BACKLIGHT * 0.4f);
+    private static final int HIGH_BACKLIGHT = (int) (MAX_BACKLIGHT * 0.65f);
 
     // Defaults for now. MIN_BACKLIGHT will be replaced later
     private static final int[] BACKLIGHTS = new int[] {
