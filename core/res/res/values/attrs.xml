@@ -955,10 +955,7 @@
         <enum name="KEYCODE_BUTTON_START" value="108" />
         <enum name="KEYCODE_BUTTON_SELECT" value="109" />
         <enum name="KEYCODE_BUTTON_MODE" value="110" />
-<<<<<<< HEAD
         <enum name="KEYCODE_MEDIA_MODE" value="112" />
-=======
->>>>>>> cyanogen/gingerbread
         <enum name="KEYCODE_FUNC_1" value="92" />
         <enum name="KEYCODE_FUNC_2" value="93" />
         <enum name="KEYCODE_FUNC_3" value="94" />

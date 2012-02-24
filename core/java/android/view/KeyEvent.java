@@ -331,12 +331,8 @@ public class KeyEvent extends InputEvent implements Parcelable {
     /** Key code constant: Mode Button key.
      * On a game controller, the button labeled Mode. */
     public static final int KEYCODE_BUTTON_MODE     = 110;
-<<<<<<< HEAD
     /** Key code constant: XT720 Media Mode button key. */
     public static final int KEYCODE_MEDIA_MODE      = 112;
-=======
-
->>>>>>> cyanogen/gingerbread
     /**
      * @hide
      */

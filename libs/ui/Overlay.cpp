@@ -15,27 +15,16 @@
  * limitations under the License.
  */
 
-<<<<<<< HEAD
 #define LOG_TAG "ui"
-=======
->>>>>>> cyanogen/gingerbread
 #include <binder/IMemory.h>
 #include <binder/Parcel.h>
 #include <utils/Errors.h>
 #include <binder/MemoryHeapBase.h>
-<<<<<<< HEAD
 #include <utils/Log.h>
 #include <ui/IOverlay.h>
 #include <ui/Overlay.h>
 #include <hardware/overlay.h>
 
-=======
-
-#include <ui/IOverlay.h>
-#include <ui/Overlay.h>
-
-#include <hardware/overlay.h>
->>>>>>> cyanogen/gingerbread
 
 namespace android {
 
@@ -114,9 +103,13 @@ int32_t Overlay::getBufferCount() const
 {
     if (mStatus != NO_ERROR) return mStatus;
 <<<<<<< HEAD
+<<<<<<< HEAD
     LOGE("Buffer count value: %d ", mOverlayData->getBufferCount(mOverlayData));
 =======
 >>>>>>> cyanogen/gingerbread
+=======
+    LOGE("Buffer count value: %d ", mOverlayData->getBufferCount(mOverlayData));
+>>>>>>> e8c94887ab40d576a389a2de018c513e90f61393
     return mOverlayData->getBufferCount(mOverlayData);
 }
 
@@ -124,9 +117,13 @@ void* Overlay::getBufferAddress(overlay_buffer_t buffer)
 {
     if (mStatus != NO_ERROR) return NULL;
 <<<<<<< HEAD
+<<<<<<< HEAD
     LOGE("Buffer address value: %d ", mOverlayData->getBufferAddress(mOverlayData, buffer));
 =======
 >>>>>>> cyanogen/gingerbread
+=======
+    LOGE("Buffer address value: %d ", mOverlayData->getBufferAddress(mOverlayData, buffer));
+>>>>>>> e8c94887ab40d576a389a2de018c513e90f61393
     return mOverlayData->getBufferAddress(mOverlayData, buffer);
 }
 

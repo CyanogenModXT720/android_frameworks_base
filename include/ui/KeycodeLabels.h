@@ -135,10 +135,7 @@ static const KeycodeLabel KEYCODES[] = {
     { "BUTTON_START", 108 },
     { "BUTTON_SELECT", 109 },
     { "BUTTON_MODE", 110 },
-<<<<<<< HEAD
     { "MEDIA_MODE", 112 },
-=======
->>>>>>> cyanogen/gingerbread
 #if defined(VISION_KEYPAD)
     { "USER1", 92 },
     { "USER2", 93 },

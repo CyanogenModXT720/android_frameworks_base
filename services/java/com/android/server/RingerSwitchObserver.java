@@ -63,10 +63,14 @@ class RingerSwitchObserver extends UEventObserver {
         mWakeLock.setReferenceCounted(false);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
        // startObserving(RINGER_SWITCH_UEVENT_MATCH);
 =======
         startObserving(RINGER_SWITCH_UEVENT_MATCH);
 >>>>>>> cyanogen/gingerbread
+=======
+       // startObserving(RINGER_SWITCH_UEVENT_MATCH);
+>>>>>>> e8c94887ab40d576a389a2de018c513e90f61393
 
         init();  // set initial status
     }
