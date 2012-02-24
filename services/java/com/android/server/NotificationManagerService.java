@@ -127,6 +127,7 @@ public class NotificationManagerService extends INotificationManager.Stub
 
     // for enabling and disabling notification pulse behavior
     private boolean mScreenOn = true;
+    private boolean mWasScreenOn = false;
     private boolean mInCall = false;
     private boolean mNotificationPulseEnabled;
 
@@ -504,6 +505,8 @@ public class NotificationManagerService extends INotificationManager.Stub
                 }
             } else if (action.equals(Intent.ACTION_SCREEN_OFF)) {
                 mScreenOn = false;
+                mWasScreenOn = true;
+                updateLightsLocked();
                 if (mAmberGreenLight) {
                     if (!mNotificationAlwaysOnEnabled) {
                         updateGreenLight();
@@ -1696,12 +1699,30 @@ public class NotificationManagerService extends INotificationManager.Stub
             }
         }
 
+        boolean wasScreenOn = mWasScreenOn;
+        mWasScreenOn = false;
+
+        if (mLedNotification == null) {
+            mNotificationLight.turnOff();
+            return;
+        }
+
+        // We can assume that if the user turned the screen off while there was
+        // still an active notification then they wanted to keep the notification
+        // for later. In this case we shouldn't flash the notification light.
+        // For special notifications that automatically turn the screen on (such
+        // as missed calls), we use this flag to force the notification light
+        // even if the screen was turned off.
+        boolean forceWithScreenOff = (mLedNotification.notification.flags &
+                Notification.FLAG_FORCE_LED_SCREEN_OFF) != 0;
+
+
         boolean greenOn = mGreenLightOn;
         final boolean inQuietHours = inQuietHours();
 
         // disable light if screen is on and "always show" is off
-        if (mLedNotification == null || mInCall || inQuietHours
-                || (mScreenOn && !mNotificationAlwaysOnEnabled)) {
+        if (mInCall || inQuietHours
+                || (mScreenOn && !mNotificationAlwaysOnEnabled) || (wasScreenOn && !forceWithScreenOff)) {
             mNotificationLight.turnOff();
             mGreenLightOn = false;
         } else {
