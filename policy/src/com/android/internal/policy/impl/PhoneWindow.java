@@ -1161,10 +1161,6 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
     public boolean superDispatchTrackballEvent(MotionEvent event) {
         return mDecor.superDispatchTrackballEvent(event);
     }
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> e8c94887ab40d576a389a2de018c513e90f61393
     private boolean isFmRadioRunning() {
 		ActivityManager manager = (ActivityManager) getContext().getSystemService(Context.ACTIVITY_SERVICE);
 		for (RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
@@ -1174,11 +1170,6 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
 		}
 		return false;
 	}
-<<<<<<< HEAD
-=======
->>>>>>> cyanogen/gingerbread
-=======
->>>>>>> e8c94887ab40d576a389a2de018c513e90f61393
 
     /**
      * A key was pressed down and not handled by anything else in the window.
@@ -1189,8 +1180,6 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
     protected boolean onKeyDown(int featureId, int keyCode, KeyEvent event) {
         final KeyEvent.DispatcherState dispatcher =
                 mDecor != null ? mDecor.getKeyDispatcherState() : null;
-<<<<<<< HEAD
-<<<<<<< HEAD
         Log.i(TAG, "Key down: " + keyCode +" event: " + event + "repeat=" + event.getRepeatCount()
                 + " flags=0x" + Integer.toHexString(event.getFlags()));
         
@@ -1213,37 +1202,6 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
 
 		}
 		else {
-=======
-        //Log.i(TAG, "Key down: repeat=" + event.getRepeatCount()
-        //        + " flags=0x" + Integer.toHexString(event.getFlags()));
-=======
-        Log.i(TAG, "Key down: " + keyCode +" event: " + event + "repeat=" + event.getRepeatCount()
-                + " flags=0x" + Integer.toHexString(event.getFlags()));
->>>>>>> e8c94887ab40d576a389a2de018c513e90f61393
-        
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_VOLUME_UP: {
-		if (isFmRadioRunning()) {
-			try {
-			 Runtime.getRuntime().exec("am broadcast -a com.motorola.fmradio.volume.change --ei type 2");
-			return true; 
-} catch (Exception e) { e.printStackTrace(); } 
-		}	
-		}
-            case KeyEvent.KEYCODE_VOLUME_DOWN: {
-<<<<<<< HEAD
->>>>>>> cyanogen/gingerbread
-=======
-		if (isFmRadioRunning()) 
-		{
-			try {
-			Runtime.getRuntime().exec("am broadcast -a com.motorola.fmradio.volume.change --ei type 0");
-			return true; 
-} catch (Exception e) { e.printStackTrace(); }
-
-		}
-		else {
->>>>>>> e8c94887ab40d576a389a2de018c513e90f61393
                 AudioManager audioManager = (AudioManager) getContext().getSystemService(
                         Context.AUDIO_SERVICE);
                 if (audioManager != null) {
@@ -1270,15 +1228,7 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
                 }
                 return true;
             }
-<<<<<<< HEAD
-<<<<<<< HEAD
 		}
-=======
-
->>>>>>> cyanogen/gingerbread
-=======
-		}
->>>>>>> e8c94887ab40d576a389a2de018c513e90f61393
 
             case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
                 /* Suppress PLAYPAUSE toggle when phone is ringing or in-call
@@ -1304,10 +1254,6 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
                 return true;
             }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> e8c94887ab40d576a389a2de018c513e90f61393
 	    case KeyEvent.KEYCODE_MEDIA_MODE: {
 		Intent intent = new Intent(Intent.ACTION_MEDIA_MODE_BUTTON, null);
 		intent.putExtra(Intent.EXTRA_KEY_EVENT, event); 
@@ -1315,11 +1261,6 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
 		return true;
 		}
 
-<<<<<<< HEAD
-=======
->>>>>>> cyanogen/gingerbread
-=======
->>>>>>> e8c94887ab40d576a389a2de018c513e90f61393
             case KeyEvent.KEYCODE_CAMERA: {
                 if (getKeyguardManager().inKeyguardRestrictedInputMode()
                         || dispatcher == null) {
@@ -1497,10 +1438,6 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
         //        + " flags=0x" + Integer.toHexString(event.getFlags()));
         
         switch (keyCode) {
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> e8c94887ab40d576a389a2de018c513e90f61393
             case KeyEvent.KEYCODE_VOLUME_UP: {
 				if (isFmRadioRunning()) {
 					try {
@@ -1510,7 +1447,6 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
 
 				}
 			}
-<<<<<<< HEAD
             case KeyEvent.KEYCODE_VOLUME_DOWN: {
 				if (isFmRadioRunning()) 
 {
@@ -1521,22 +1457,6 @@ try {
 
 				}
 		else { 
-=======
-            case KeyEvent.KEYCODE_VOLUME_UP:
-            case KeyEvent.KEYCODE_VOLUME_DOWN: {
->>>>>>> cyanogen/gingerbread
-=======
-            case KeyEvent.KEYCODE_VOLUME_DOWN: {
-				if (isFmRadioRunning()) 
-{
-try {
-					Runtime.getRuntime().exec("am broadcast -a com.motorola.fmradio.volume.change --ei type 1");
-					return true;
-} catch (Exception e) { e.printStackTrace(); }
-
-				}
-		else { 
->>>>>>> e8c94887ab40d576a389a2de018c513e90f61393
                 if (!event.isCanceled()) {
                     AudioManager audioManager = (AudioManager) getContext().getSystemService(
                             Context.AUDIO_SERVICE);
@@ -1554,36 +1474,18 @@ try {
                 }
                 return true;
             }
-<<<<<<< HEAD
-<<<<<<< HEAD
 		}
-=======
-
->>>>>>> cyanogen/gingerbread
-=======
-		}
->>>>>>> e8c94887ab40d576a389a2de018c513e90f61393
             case KeyEvent.KEYCODE_MENU: {
                 onKeyUpPanel(featureId < 0 ? FEATURE_OPTIONS_PANEL : featureId,
                         event);
                 return true;
             }
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> e8c94887ab40d576a389a2de018c513e90f61393
 //	    case KeyEvent.KEYCODE_MEDIA_MODE: {
 //		Intent intent = new Intent(Intent.ACTION_MEDIA_MODE_BUTTON, null);
 //		intent.putExtra(Intent.EXTRA_KEY_EVENT, event); 
 //		getContext().sendOrderedBroadcast(intent, null);
 //		return true;
 //		}
-<<<<<<< HEAD
-=======
-
->>>>>>> cyanogen/gingerbread
-=======
->>>>>>> e8c94887ab40d576a389a2de018c513e90f61393
             case KeyEvent.KEYCODE_BACK: {
                 if (featureId < 0) break;
                 if (event.isTracking() && !event.isCanceled()) {
