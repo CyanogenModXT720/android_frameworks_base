@@ -1728,6 +1728,7 @@ public class Intent implements Parcelable, Cloneable {
     @SdkConstant(SdkConstantType.BROADCAST_INTENT_ACTION)
     public static final String ACTION_CAMERA_BUTTON = "android.intent.action.CAMERA_BUTTON";
 
+<<<<<<< HEAD
     /**
     * Broadcast Action:  The "Media Mode Button" was pressed. Includes a single
      * extra field, {@link #EXTRA_KEY_EVENT}, containing the key event that
@@ -1736,6 +1737,8 @@ public class Intent implements Parcelable, Cloneable {
     @SdkConstant(SdkConstantType.BROADCAST_INTENT_ACTION)
     public static final String ACTION_MEDIA_MODE_BUTTON = "android.intent.action.MEDIA_MODE_BUTTON";
 
+=======
+>>>>>>> cyanogen/gingerbread
     // *** NOTE: @todo(*) The following really should go into a more domain-specific
     // location; they are not general-purpose actions.
 

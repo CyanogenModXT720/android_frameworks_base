@@ -907,7 +907,10 @@ public class KeyguardViewMediator implements KeyguardViewCallback,
             case KeyEvent.KEYCODE_MEDIA_REWIND:
             case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
             case KeyEvent.KEYCODE_CAMERA:
+<<<<<<< HEAD
 	    case KeyEvent.KEYCODE_MEDIA_MODE:
+=======
+>>>>>>> cyanogen/gingerbread
                 return false;
         }
         return true;

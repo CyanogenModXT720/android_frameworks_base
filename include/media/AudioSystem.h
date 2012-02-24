@@ -45,7 +45,13 @@ public:
         ENFORCED_AUDIBLE = 7, // Sounds that cannot be muted by user and must be routed to speaker
         DTMF             = 8,
         TTS              = 9,
+<<<<<<< HEAD
         FM              = 10,
+=======
+#ifdef HAVE_FM_RADIO
+        FM              = 10,
+#endif
+>>>>>>> cyanogen/gingerbread
         NUM_STREAM_TYPES
     };
 
@@ -532,9 +538,12 @@ public:
     static const char *keyFmOn;
     static const char *keyFmOff;
 #endif
+<<<<<<< HEAD
     static const char *keyFMLaunch;
     static const char *keyFMRouting;
     static const char *keyHDMIRouting;
+=======
+>>>>>>> cyanogen/gingerbread
     static const char *keyInputSource;
 
     String8 toString();

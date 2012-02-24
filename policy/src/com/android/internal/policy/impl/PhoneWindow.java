@@ -33,8 +33,11 @@ import com.android.internal.view.menu.SubMenuBuilder;
 
 import android.app.KeyguardManager;
 import android.app.SearchManager;
+<<<<<<< HEAD
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningServiceInfo;
+=======
+>>>>>>> cyanogen/gingerbread
 import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -172,7 +175,10 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
     private SearchManager mSearchManager = null;
 
     private TelephonyManager mTelephonyManager = null;
+<<<<<<< HEAD
 /* based on decompiled android.policy.jar */ 
+=======
+>>>>>>> cyanogen/gingerbread
 
     public PhoneWindow(Context context) {
         super(context);
@@ -1161,6 +1167,7 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
     public boolean superDispatchTrackballEvent(MotionEvent event) {
         return mDecor.superDispatchTrackballEvent(event);
     }
+<<<<<<< HEAD
     private boolean isFmRadioRunning() {
 		ActivityManager manager = (ActivityManager) getContext().getSystemService(Context.ACTIVITY_SERVICE);
 		for (RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
@@ -1170,6 +1177,8 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
 		}
 		return false;
 	}
+=======
+>>>>>>> cyanogen/gingerbread
 
     /**
      * A key was pressed down and not handled by anything else in the window.
@@ -1180,6 +1189,7 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
     protected boolean onKeyDown(int featureId, int keyCode, KeyEvent event) {
         final KeyEvent.DispatcherState dispatcher =
                 mDecor != null ? mDecor.getKeyDispatcherState() : null;
+<<<<<<< HEAD
         Log.i(TAG, "Key down: " + keyCode +" event: " + event + "repeat=" + event.getRepeatCount()
                 + " flags=0x" + Integer.toHexString(event.getFlags()));
         
@@ -1202,6 +1212,14 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
 
 		}
 		else {
+=======
+        //Log.i(TAG, "Key down: repeat=" + event.getRepeatCount()
+        //        + " flags=0x" + Integer.toHexString(event.getFlags()));
+        
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_VOLUME_UP:
+            case KeyEvent.KEYCODE_VOLUME_DOWN: {
+>>>>>>> cyanogen/gingerbread
                 AudioManager audioManager = (AudioManager) getContext().getSystemService(
                         Context.AUDIO_SERVICE);
                 if (audioManager != null) {
@@ -1228,7 +1246,11 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
                 }
                 return true;
             }
+<<<<<<< HEAD
 		}
+=======
+
+>>>>>>> cyanogen/gingerbread
 
             case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
                 /* Suppress PLAYPAUSE toggle when phone is ringing or in-call
@@ -1254,6 +1276,7 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
                 return true;
             }
 
+<<<<<<< HEAD
 	    case KeyEvent.KEYCODE_MEDIA_MODE: {
 		Intent intent = new Intent(Intent.ACTION_MEDIA_MODE_BUTTON, null);
 		intent.putExtra(Intent.EXTRA_KEY_EVENT, event); 
@@ -1261,6 +1284,8 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
 		return true;
 		}
 
+=======
+>>>>>>> cyanogen/gingerbread
             case KeyEvent.KEYCODE_CAMERA: {
                 if (getKeyguardManager().inKeyguardRestrictedInputMode()
                         || dispatcher == null) {
@@ -1438,6 +1463,7 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
         //        + " flags=0x" + Integer.toHexString(event.getFlags()));
         
         switch (keyCode) {
+<<<<<<< HEAD
             case KeyEvent.KEYCODE_VOLUME_UP: {
 				if (isFmRadioRunning()) {
 					try {
@@ -1457,6 +1483,10 @@ try {
 
 				}
 		else { 
+=======
+            case KeyEvent.KEYCODE_VOLUME_UP:
+            case KeyEvent.KEYCODE_VOLUME_DOWN: {
+>>>>>>> cyanogen/gingerbread
                 if (!event.isCanceled()) {
                     AudioManager audioManager = (AudioManager) getContext().getSystemService(
                             Context.AUDIO_SERVICE);
@@ -1474,18 +1504,26 @@ try {
                 }
                 return true;
             }
+<<<<<<< HEAD
 		}
+=======
+
+>>>>>>> cyanogen/gingerbread
             case KeyEvent.KEYCODE_MENU: {
                 onKeyUpPanel(featureId < 0 ? FEATURE_OPTIONS_PANEL : featureId,
                         event);
                 return true;
             }
+<<<<<<< HEAD
 //	    case KeyEvent.KEYCODE_MEDIA_MODE: {
 //		Intent intent = new Intent(Intent.ACTION_MEDIA_MODE_BUTTON, null);
 //		intent.putExtra(Intent.EXTRA_KEY_EVENT, event); 
 //		getContext().sendOrderedBroadcast(intent, null);
 //		return true;
 //		}
+=======
+
+>>>>>>> cyanogen/gingerbread
             case KeyEvent.KEYCODE_BACK: {
                 if (featureId < 0) break;
                 if (event.isTracking() && !event.isCanceled()) {

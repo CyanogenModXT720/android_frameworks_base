@@ -17,7 +17,11 @@
 
 
 #define LOG_TAG "AudioFlinger"
+<<<<<<< HEAD
 #define LOG_NDEBUG 0
+=======
+//#define LOG_NDEBUG 0
+>>>>>>> cyanogen/gingerbread
 
 #include <math.h>
 #include <signal.h>

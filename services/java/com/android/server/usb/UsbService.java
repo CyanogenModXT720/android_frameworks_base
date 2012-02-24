@@ -57,7 +57,11 @@ import java.util.List;
  */
 public class UsbService extends IUsbManager.Stub {
     private static final String TAG = UsbService.class.getSimpleName();
+<<<<<<< HEAD
     private static final boolean LOG = true;
+=======
+    private static final boolean LOG = false;
+>>>>>>> cyanogen/gingerbread
 
     private static final String USB_CONNECTED_MATCH =
             "DEVPATH=/devices/virtual/switch/usb_connected";
@@ -294,6 +298,7 @@ public class UsbService extends IUsbManager.Stub {
             // Watch for USB configuration changes
             if (mConfiguration >= 0 && !mHasUsbService) {
                 if (mLegacy) {
+<<<<<<< HEAD
 		   Log.d(TAG, "Usb Legacy check");
                     mUEventObserver.startObserving(USB_LEGACY_MATCH);
                 } else {
@@ -302,6 +307,12 @@ public class UsbService extends IUsbManager.Stub {
 		   Log.d(TAG, "USB CONF match");
                     mUEventObserver.startObserving(USB_CONFIGURATION_MATCH);
 		   Log.d(TAG, "USB Func Match");
+=======
+                    mUEventObserver.startObserving(USB_LEGACY_MATCH);
+                } else {
+                    mUEventObserver.startObserving(USB_CONNECTED_MATCH);
+                    mUEventObserver.startObserving(USB_CONFIGURATION_MATCH);
+>>>>>>> cyanogen/gingerbread
                     mUEventObserver.startObserving(USB_FUNCTIONS_MATCH);
                 }
             }
