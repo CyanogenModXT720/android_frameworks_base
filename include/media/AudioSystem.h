@@ -532,18 +532,9 @@ public:
     static const char *keyFmOn;
     static const char *keyFmOff;
 #endif
-<<<<<<< HEAD
-<<<<<<< HEAD
     static const char *keyFMLaunch;
     static const char *keyFMRouting;
     static const char *keyHDMIRouting;
-=======
->>>>>>> cyanogen/gingerbread
-=======
-    static const char *keyFMLaunch;
-    static const char *keyFMRouting;
-    static const char *keyHDMIRouting;
->>>>>>> e8c94887ab40d576a389a2de018c513e90f61393
     static const char *keyInputSource;
 
     String8 toString();
