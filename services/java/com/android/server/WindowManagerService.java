@@ -10157,19 +10157,11 @@ public class WindowManagerService extends IWindowManager.Stub
             Debug.startMethodTracing(file.toString(), 8 * 1024 * 1024);
         }
 
-<<<<<<< HEAD
-        if (CUSTOM_SCREEN_ROTATION && mPolicy.isScreenOn()) {
-            if (mScreenRotationAnimation != null && mScreenRotationAnimation.isAnimating()) {
-                mScreenRotationAnimation.kill();
-                mScreenRotationAnimation = null;
-            }
-=======
         if (mScreenRotationAnimation != null && mScreenRotationAnimation.isAnimating()) {
             mScreenRotationAnimation.kill();
             mScreenRotationAnimation = null;
         }
         if (CUSTOM_SCREEN_ROTATION && mPolicy.isScreenOn()) {
->>>>>>> cyanogen/gingerbread
             if (mScreenRotationAnimation == null) {
                 mScreenRotationAnimation = new ScreenRotationAnimation(mContext,
                         mDisplay, mFxSession, inTransaction);
@@ -10196,16 +10188,6 @@ public class WindowManagerService extends IWindowManager.Stub
             Debug.stopMethodTracing();
         }
 
-<<<<<<< HEAD
-        if (CUSTOM_SCREEN_ROTATION) {
-            if (mScreenRotationAnimation != null) {
-                if (mScreenRotationAnimation.dismiss(MAX_ANIMATION_DURATION,
-                        mTransitionAnimationScale)) {
-                    requestAnimationLocked(0);
-                } else {
-                    mScreenRotationAnimation = null;
-                }
-=======
         if (mScreenRotationAnimation != null) {
             if (DEBUG_ORIENTATION) Slog.i(TAG, "**** Dismissing screen rotation animation");
             if (mScreenRotationAnimation.dismiss(MAX_ANIMATION_DURATION,
@@ -10213,7 +10195,6 @@ public class WindowManagerService extends IWindowManager.Stub
                 requestAnimationLocked(0);
             } else {
                 mScreenRotationAnimation = null;
->>>>>>> cyanogen/gingerbread
             }
         }
         Surface.unfreezeDisplay(0);

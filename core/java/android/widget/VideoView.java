@@ -231,7 +231,7 @@ public class VideoView extends SurfaceView implements MediaPlayerControl {
         }
 
         // Unregister for device HDMI-Hotplug intent broadcasts.
-        if(SystemProperties.OMAP_ENHANCEMENT) {
+        if(SystemProperties.USE_HDMI) {
             //unregister and delete the memory for hdmi intent
             if (mHdmiIntent != null) {
                 mContext.unregisterReceiver(mReceiver);
@@ -340,7 +340,7 @@ public class VideoView extends SurfaceView implements MediaPlayerControl {
             * This is required to avoid the scenario where the event is disptached
             * even before Overlay source is created.
             */
-            if(SystemProperties.OMAP_ENHANCEMENT) {
+            if(SystemProperties.USE_HDMI) {
                 mHdmiIntent = new IntentFilter(ACTION_HDMI_PLUG);
                 mContext.registerReceiver(mReceiver, mHdmiIntent);
             }
@@ -674,7 +674,7 @@ public class VideoView extends SurfaceView implements MediaPlayerControl {
             if (mMediaPlayer.resume()) {
                 mCurrentState = mStateWhenSuspended;
                 mTargetState = mStateWhenSuspended;
-                if(SystemProperties.OMAP_ENHANCEMENT) {
+                if(SystemProperties.USE_HDMI) {
                     Intent hdmiIntent =  mContext.registerReceiver(null,
                                           new IntentFilter(ACTION_HDMI_PLUG));
                     mReceiver.onReceive(mContext, hdmiIntent);
@@ -762,7 +762,7 @@ public class VideoView extends SurfaceView implements MediaPlayerControl {
             }
             String action = intent.getAction();
 
-            if (SystemProperties.OMAP_ENHANCEMENT && action.equals(ACTION_HDMI_PLUG)) {
+            if (SystemProperties.USE_HDMI && action.equals(ACTION_HDMI_PLUG)) {
                 int state = intent.getIntExtra("state", 0);
 
                 if(state==1) {

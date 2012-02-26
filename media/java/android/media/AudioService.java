@@ -330,7 +330,9 @@ public class AudioService extends IAudioService.Stub {
             intentFilter.addAction(MAIN_MIC_CHOICE);
             intentFilter.addAction(SUB_MIC_CHOICE);
         }
-
+		if (SystemProperties.USE_HDMI) {
+		    intentFilter.addAction(ACTION_HDMI_PLUG);
+		}
         intentFilter.addAction(BluetoothA2dp.ACTION_SINK_STATE_CHANGED);
         intentFilter.addAction(BluetoothHeadset.ACTION_STATE_CHANGED);
         intentFilter.addAction(Intent.ACTION_DOCK_EVENT);
@@ -2008,7 +2010,7 @@ public class AudioService extends IAudioService.Stub {
                                 "");
                     }
                 }
-            } else if (SystemProperties.OMAP_ENHANCEMENT && action.equals(ACTION_HDMI_PLUG)) {
+            } else if (SystemProperties.USE_HDMI && action.equals(ACTION_HDMI_PLUG)) {
                 int state = intent.getIntExtra("state", 0);
                 boolean isConnected = mConnectedDevices.containsKey(AudioSystem.DEVICE_OUT_AUX_DIGITAL);
 
