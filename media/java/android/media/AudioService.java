@@ -2203,18 +2203,25 @@ public class AudioService extends IAudioService.Stub {
         public IBinder mSourceRef = null;
         public String mClientId;
         public int mFocusChangeType;
+        public AudioFocusDeathHandler mHandler;
 
         public FocusStackEntry() {
         }
 
         public FocusStackEntry(int streamType, int duration, boolean isTransportControlReceiver,
-                IAudioFocusDispatcher afl, IBinder source, String id) {
+                IAudioFocusDispatcher afl, IBinder source, String id, AudioFocusDeathHandler hdlr) {
             mStreamType = streamType;
             mIsTransportControlReceiver = isTransportControlReceiver;
             mFocusDispatcher = afl;
             mSourceRef = source;
             mClientId = id;
+            mHandler = hdlr;
             mFocusChangeType = duration;
+        }
+        public void unlinkToDeath() {
+            if (mSourceRef != null && mHandler != null) {
+                mSourceRef.unlinkToDeath(mHandler, 0);
+            }
         }
     }
 
@@ -2247,8 +2254,10 @@ public class AudioService extends IAudioService.Stub {
         // is the current top of the focus stack abandoning focus? (because of death or request)
         if (!mFocusStack.empty() && mFocusStack.peek().mClientId.equals(clientToRemove))
         {
-            //Log.i(TAG, "   removeFocusStackEntry() removing top of stack");
-            mFocusStack.pop();
+            Log.i(TAG, "   removeFocusStackEntry() removing top of stack");
+            FocusStackEntry fse = mFocusStack.pop();
+            fse.unlinkToDeath();
+
             if (signal) {
                 // notify the new top of the stack it gained focus
                 notifyTopOfAudioFocusStack();
@@ -2262,7 +2271,8 @@ public class AudioService extends IAudioService.Stub {
                 if(fse.mClientId.equals(clientToRemove)) {
                     Log.i(TAG, " AudioFocus  abandonAudioFocus(): removing entry for "
                             + fse.mClientId);
-                    mFocusStack.remove(fse);
+                    stackIterator.remove();
+                    fse.unlinkToDeath();
                 }
             }
         }
@@ -2282,7 +2292,7 @@ public class AudioService extends IAudioService.Stub {
             if(fse.mSourceRef.equals(cb)) {
                 Log.i(TAG, " AudioFocus  abandonAudioFocus(): removing entry for "
                         + fse.mClientId);
-                mFocusStack.remove(fse);
+                stackIterator.remove();
             }
         }
         if (isTopOfStackForClientToRemove) {
@@ -2349,6 +2359,18 @@ public class AudioService extends IAudioService.Stub {
                 return AudioManager.AUDIOFOCUS_REQUEST_FAILED;
             }
 
+            // handle the potential premature death of the new holder of the focus
+            // (premature death == death before abandoning focus)
+            // Register for client death notification
+            AudioFocusDeathHandler afdh = new AudioFocusDeathHandler(cb);
+            try {
+                cb.linkToDeath(afdh, 0);
+            } catch (RemoteException e) {
+                // client has already died!
+                Log.w(TAG, "AudioFocus  requestAudioFocus() could not link to "+cb+" binder death");
+                return AudioManager.AUDIOFOCUS_REQUEST_FAILED;
+            }
+
             if (!mFocusStack.empty() && mFocusStack.peek().mClientId.equals(clientId)) {
                 // if focus is already owned by this client and the reason for acquiring the focus
                 // hasn't changed, don't do anything
@@ -2373,45 +2395,13 @@ public class AudioService extends IAudioService.Stub {
             }
 
             // focus requester might already be somewhere below in the stack, remove it
-            removeFocusStackEntry(clientId, false);
+            removeFocusStackEntry(clientId, false /* signal */);
 
             // push focus requester at the top of the audio focus stack
             mFocusStack.push(new FocusStackEntry(mainStreamType, focusChangeHint, false, fd, cb,
-                    clientId));
+                    clientId, afdh));
+
         }//synchronized(mAudioFocusLock)
-
-        // handle the potential premature death of the new holder of the focus
-        // (premature death == death before abandoning focus) for a client which is not the
-        // AudioService's phone state listener
-        if (!IN_VOICE_COMM_FOCUS_ID.equals(clientId)) {
-            // Register for client death notification
-            int size = 0;
-            int i = 0;
-            synchronized(mAudioFocusLock) {
-              size = mAudioFocusDeathHandlers.size();
-              for (i = 0; i < size; i++) {
-                   final AudioFocusDeathHandler afdhandler = mAudioFocusDeathHandlers.get(i);
-
-                   if(afdhandler.getBinder() == cb) {
-                      break;
-                   }
-              }
-            }
-            // Register once per client
-            if (i == size) {
-                AudioFocusDeathHandler afdh = new AudioFocusDeathHandler(cb);
-
-                try {
-                    cb.linkToDeath(afdh, 0);
-                    synchronized(mAudioFocusLock) {
-                       mAudioFocusDeathHandlers.add(afdh);
-                    }
-                } catch (RemoteException e) {
-                    // client has already died!
-                    Log.w(TAG, "AudioFocus  requestAudioFocus() could not link to "+cb+" binder death");
-                }
-            }
-        }
 
         return AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
     }
@@ -2579,7 +2569,7 @@ public class AudioService extends IAudioService.Stub {
         while(stackIterator.hasNext()) {
             RemoteControlStackEntry rcse = (RemoteControlStackEntry)stackIterator.next();
             if(rcse.mReceiverComponent.equals(newReceiver)) {
-                mRCStack.remove(rcse);
+                stackIterator.remove();
                 break;
             }
         }
@@ -2595,7 +2585,7 @@ public class AudioService extends IAudioService.Stub {
         while(stackIterator.hasNext()) {
             RemoteControlStackEntry rcse = (RemoteControlStackEntry)stackIterator.next();
             if(rcse.mReceiverComponent.equals(newReceiver)) {
-                mRCStack.remove(rcse);
+                stackIterator.remove();
                 break;
             }
         }
