@@ -17,7 +17,17 @@
 # This makefile supplies the rules for building a library of JNI code for
 # use by our example platform shared library.
 
+HDMI_FORCE := false
+
 ifeq ($(OMAP_ENHANCEMENT),true)
+HDMI_FORCE := true
+endif
+
+ifeq ($(TARGET_BOOTLOADER_BOARD_NAME),sholest)
+HDMI_FORCE := true
+endif
+
+ifeq ($(HDMI_FORCE),true)
 LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
