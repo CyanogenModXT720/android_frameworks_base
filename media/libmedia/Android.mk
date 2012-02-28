@@ -62,7 +62,7 @@ ifeq ($(OMAP_ENHANCEMENT),true)
 
 LOCAL_SRC_FILES += OverlayRenderer.cpp
 
-LOCAL_C_INCLUDES += $(TOP)/hardware/ti/omap3/liboverlay
+LOCAL_C_INCLUDES += $(TOP)/hardware/ti/omap3-compat/liboverlay
 
 endif
 

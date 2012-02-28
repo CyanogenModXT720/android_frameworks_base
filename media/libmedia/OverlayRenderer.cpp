@@ -183,7 +183,8 @@ int32_t OverlayRenderer::createBuffers()
 
     /* check if the overlay created required number of buffers for decoder */
     if (mBufferCount != (uint32_t)mOverlay->getBufferCount() ) {
-        mOverlay->setParameter(OVERLAY_NUM_BUFFERS, mBufferCount);
+        //mOverlay->setParameter(OVERLAY_NUM_BUFFERS, mBufferCount);
+        mOverlay->setParameter(7, mBufferCount);
         mOverlay->resizeInput(mDecodedWidth, mDecodedHeight);
     }
 
