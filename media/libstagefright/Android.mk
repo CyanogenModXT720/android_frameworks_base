@@ -64,7 +64,7 @@ LOCAL_C_INCLUDES:= \
         $(TOP)/frameworks/base/media/libstagefright/rtsp
 ifeq ($(OMAP_ENHANCEMENT),true)
 LOCAL_C_INCLUDES += \
-        $(TOP)/hardware/ti/omap3/liboverlay
+        $(TOP)/hardware/ti/omap3-compat/liboverlay
 endif
 
 ifeq ($(TARGET_BOARD_PLATFORM),omap4)
@@ -73,7 +73,7 @@ LOCAL_C_INCLUDES +=					\
 	hardware/ti/omap3/camera-omap4/inc
 endif
 ifeq ($(OMAP_ENHANCEMENT),true)
-LOCAL_C_INCLUDES += $(TOP)/hardware/ti/omap3/liboverlay
+LOCAL_C_INCLUDES += $(TOP)/hardware/ti/omap3-compat/liboverlay
 endif
 LOCAL_SHARED_LIBRARIES := \
         libbinder         \

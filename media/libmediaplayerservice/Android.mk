@@ -73,7 +73,7 @@ endif
 
 ifeq ($(OMAP_ENHANCEMENT),true)
 
-LOCAL_C_INCLUDES += $(TOP)/hardware/ti/omap3/liboverlay
+LOCAL_C_INCLUDES += $(TOP)/hardware/ti/omap3-compat/liboverlay
 
 LOCAL_SHARED_LIBRARIES += libui
 
