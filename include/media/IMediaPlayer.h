@@ -54,6 +54,9 @@ public:
 #ifdef OMAP_ENHANCEMENT
     virtual status_t        requestVideoCloneMode(bool enable) = 0;
 #endif
+#ifdef BOARD_HAVE_HDMI
+    virtual status_t        requestVideoCloneMode(bool enable) = 0;
+#endif
     // Invoke a generic method on the player by using opaque parcels
     // for the request and reply.
     // @param request Parcel that must start with the media player

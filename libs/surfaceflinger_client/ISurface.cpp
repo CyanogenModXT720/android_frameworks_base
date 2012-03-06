@@ -181,7 +181,15 @@ public:
         }
     }
 #endif
-
+#ifdef BOARD_HAVE_HDMI
+    virtual void setDisplayId(int displayId) {
+        Parcel data, reply;
+        data.writeInterfaceToken(ISurface::getInterfaceDescriptor());
+        data.writeInt32(displayId);
+        remote()->transact(SET_DISPLAY_ID, data, &reply);
+        return;
+    }
+#endif
 };
 
 IMPLEMENT_META_INTERFACE(Surface, "android.ui.ISurface");
@@ -276,6 +284,15 @@ status_t BnSurface::onTransact(
                 return reply->writeInt32(fd);
             }
         }
+
+#endif
+#ifdef BOARD_HAVE_HDMI
+//        case SET_DISPLAY_ID: {
+//            CHECK_INTERFACE(ISurface, data, reply);
+//            int dpy = data.readInt32();
+//            setDisplayId(dpy);
+//            return NO_ERROR;
+//        } break;
 
 #endif
         default:

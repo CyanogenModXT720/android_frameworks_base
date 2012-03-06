@@ -79,6 +79,10 @@ LOCAL_SHARED_LIBRARIES += libui
 
 endif
 
+ifeq ($(BOARD_HAVE_HDMI),true)
+LOCAL_C_INCLUDES += $(TOP)/hardware/ti/omap3-compat/liboverlay
+endif
+
 LOCAL_MODULE:= libmediaplayerservice
 
 include $(BUILD_SHARED_LIBRARY)

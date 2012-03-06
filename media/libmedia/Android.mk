@@ -66,4 +66,12 @@ LOCAL_C_INCLUDES += $(TOP)/hardware/ti/omap3-compat/liboverlay
 
 endif
 
+ifeq ($(BOARD_HAVE_HDMI),true)
+
+LOCAL_SRC_FILES += OverlayRenderer.cpp
+
+LOCAL_C_INCLUDES += $(TOP)/hardware/ti/omap3-compat/liboverlay
+
+endif
+
 include $(BUILD_SHARED_LIBRARY)

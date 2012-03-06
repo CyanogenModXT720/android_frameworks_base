@@ -23,7 +23,7 @@ ifeq ($(OMAP_ENHANCEMENT),true)
 HDMI_FORCE := true
 endif
 
-ifeq ($(TARGET_BOOTLOADER_BOARD_NAME),sholest)
+ifeq ($(BOARD_HAVE_HDMI),true)
 HDMI_FORCE := true
 endif
 

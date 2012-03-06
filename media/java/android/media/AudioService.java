@@ -2008,7 +2008,7 @@ public class AudioService extends IAudioService.Stub {
                                 "");
                     }
                 }
-            } else if (SystemProperties.OMAP_ENHANCEMENT && action.equals(ACTION_HDMI_PLUG)) {
+            } else if ((SystemProperties.OMAP_ENHANCEMENT || SystemProperties.HAVE_HDMI) && action.equals(ACTION_HDMI_PLUG)) {
                 int state = intent.getIntExtra("state", 0);
                 boolean isConnected = mConnectedDevices.containsKey(AudioSystem.DEVICE_OUT_AUX_DIGITAL);
 

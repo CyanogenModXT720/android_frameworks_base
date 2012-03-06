@@ -549,7 +549,7 @@ class ServerThread extends Thread {
                 }
             }
 
-            if (SystemProperties.OMAP_ENHANCEMENT ) {
+            if (SystemProperties.OMAP_ENHANCEMENT || SystemProperties.HAVE_HDMI)  {
                 if(SystemProperties.getBoolean("tv.hdmi.uicloning.enable", false)) {
                     try {
                         Slog.i(TAG, "UiCloningService");

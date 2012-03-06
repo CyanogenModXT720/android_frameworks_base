@@ -39,6 +39,9 @@ class MediaRecorderClient;
 #ifdef OMAP_ENHANCEMENT
 class IOverlayRenderer;
 #endif
+#ifdef BOARD_HAVE_HDMI
+class IOverlayRenderer;
+#endif
 
 #define CALLBACK_ANTAGONIZER 0
 #if CALLBACK_ANTAGONIZER
@@ -200,6 +203,9 @@ public:
 #ifdef OMAP_ENHANCEMENT
     virtual sp<IOverlayRenderer>  getOverlayRenderer();
 #endif
+#ifdef BOARD_HAVE_HDMI
+    virtual sp<IOverlayRenderer>  getOverlayRenderer();
+#endif
     virtual status_t            dump(int fd, const Vector<String16>& args);
 
             void                removeClient(wp<Client> client);
@@ -234,6 +240,9 @@ private:
         virtual status_t        setAuxEffectSendLevel(float level);
         virtual status_t        attachAuxEffect(int effectId);
 #ifdef OMAP_ENHANCEMENT
+        virtual status_t        requestVideoCloneMode(bool enable);
+#endif
+#ifdef BOARD_HAVE_HDMI
         virtual status_t        requestVideoCloneMode(bool enable);
 #endif
 
@@ -314,6 +323,9 @@ private:
                 int32_t                     mNextConnId;
                 sp<IOMX>                    mOMX;
 #ifdef OMAP_ENHANCEMENT
+                sp<IOverlayRenderer> mOverlayRenderer;
+#endif
+#ifdef BOARD_HAVE_HDMI
                 sp<IOverlayRenderer> mOverlayRenderer;
 #endif
 };

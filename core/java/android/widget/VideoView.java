@@ -231,7 +231,7 @@ public class VideoView extends SurfaceView implements MediaPlayerControl {
         }
 
         // Unregister for device HDMI-Hotplug intent broadcasts.
-        if(SystemProperties.OMAP_ENHANCEMENT) {
+        if(SystemProperties.OMAP_ENHANCEMENT || SystemProperties.HAVE_HDMI) {
             //unregister and delete the memory for hdmi intent
             if (mHdmiIntent != null) {
                 mContext.unregisterReceiver(mReceiver);
@@ -340,7 +340,7 @@ public class VideoView extends SurfaceView implements MediaPlayerControl {
             * This is required to avoid the scenario where the event is disptached
             * even before Overlay source is created.
             */
-            if(SystemProperties.OMAP_ENHANCEMENT) {
+            if(SystemProperties.OMAP_ENHANCEMENT || SystemProperties.HAVE_HDMI) {
                 mHdmiIntent = new IntentFilter(ACTION_HDMI_PLUG);
                 mContext.registerReceiver(mReceiver, mHdmiIntent);
             }
@@ -674,7 +674,7 @@ public class VideoView extends SurfaceView implements MediaPlayerControl {
             if (mMediaPlayer.resume()) {
                 mCurrentState = mStateWhenSuspended;
                 mTargetState = mStateWhenSuspended;
-                if(SystemProperties.OMAP_ENHANCEMENT) {
+                if(SystemProperties.OMAP_ENHANCEMENT || SystemProperties.HAVE_HDMI) {
                     Intent hdmiIntent =  mContext.registerReceiver(null,
                                           new IntentFilter(ACTION_HDMI_PLUG));
                     mReceiver.onReceive(mContext, hdmiIntent);
@@ -762,15 +762,15 @@ public class VideoView extends SurfaceView implements MediaPlayerControl {
             }
             String action = intent.getAction();
 
-            if (SystemProperties.OMAP_ENHANCEMENT && action.equals(ACTION_HDMI_PLUG)) {
+            if ((SystemProperties.OMAP_ENHANCEMENT || SystemProperties.HAVE_HDMI) && action.equals(ACTION_HDMI_PLUG)) {
                 int state = intent.getIntExtra("state", 0);
 
                 if(state==1) {
                     Log.d(TAG, "VideoPlaybackBroadcastReceiver.onReceive() : Switching to HDMI_TV)");
-                    mOmapMMHandle.setDisplayId(DISPLAY_TYPE_HDMI_TV);
+                    mOmapMMHandle.setDisplayId(DISPLAY_TYPE_HDMI_TV); // will have to try how to switch the display w/out omapmmlibrary (or try to fix it)
                 } else {
                     Log.d(TAG, "VideoPlaybackBroadcastReceiver.onReceive() : Switching to LCD-Primary");
-                    mOmapMMHandle.setDisplayId(DISPLAY_TYPE_LCD_PRIMARY);
+                    mOmapMMHandle.setDisplayId(DISPLAY_TYPE_LCD_PRIMARY); // and then we will have to modify this code to (or better, "wrap/modify" omapmmlib to fit)
                 }
             }
         }

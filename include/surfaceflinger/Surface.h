@@ -82,7 +82,9 @@ public:
 #ifdef OMAP_ENHANCEMENT
     status_t    setDisplayId(int32_t displayId);
 #endif
-
+#ifdef BOARD_HAVE_HDMI
+    status_t	setDisplayId(int32_t displayId);
+#endif
     static status_t writeSurfaceToParcel(
             const sp<SurfaceControl>& control, Parcel* parcel);
 
@@ -105,6 +107,9 @@ private:
     friend class Test;
     const sp<ISurface>& getISurface() const { return mSurface; }
 #ifdef OMAP_ENHANCEMENT
+    friend class OmapMMLibrary;
+#endif
+#ifdef BOARD_HAVE_HDMI
     friend class OmapMMLibrary;
 #endif
     friend class Surface;
@@ -185,6 +190,9 @@ private:
     // this is just to be able to write some unit tests
     friend class Test;
 #ifdef OMAP_ENHANCEMENT
+    friend class OmapMMLibrary;
+#endif
+#ifdef BOARD_HAVE_HDMI
     friend class OmapMMLibrary;
 #endif
 private:

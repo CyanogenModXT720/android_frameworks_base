@@ -65,7 +65,9 @@
 #ifdef OMAP_ENHANCEMENT
 #include <media/OverlayRenderer.h>
 #endif
-
+#ifdef BOARD_HAVE_HDMI
+#include <media/OverlayRenderer.h>
+#endif
 #ifdef USE_BOARD_MEDIAPLUGIN
 #define NO_OPENCORE 1
 #include <hardware_legacy/MediaPlayerHardwareInterface.h>
@@ -325,7 +327,17 @@ sp<IOverlayRenderer> MediaPlayerService::getOverlayRenderer() {
     return mOverlayRenderer;
 }
 #endif
+#ifdef BOARD_HAVE_HDMI
+sp<IOverlayRenderer> MediaPlayerService::getOverlayRenderer() {
+    Mutex::Autolock autoLock(mLock);
 
+    if (mOverlayRenderer.get() == NULL) {
+        mOverlayRenderer = new OverlayRenderer;
+    }
+
+    return mOverlayRenderer;
+}
+#endif
 status_t MediaPlayerService::AudioCache::dump(int fd, const Vector<String16>& args) const
 {
     const size_t SIZE = 256;
@@ -1036,6 +1048,16 @@ status_t MediaPlayerService::Client::resume() {
 }
 
 #ifdef OMAP_ENHANCEMENT
+status_t MediaPlayerService::Client::requestVideoCloneMode(bool enable) {
+    sp<MediaPlayerBase> p = getPlayer();
+    if (p == 0) return UNKNOWN_ERROR;
+
+    return p->requestVideoCloneMode(enable);
+}
+
+#endif
+
+#ifdef BOARD_HAVE_HDMI
 status_t MediaPlayerService::Client::requestVideoCloneMode(bool enable) {
     sp<MediaPlayerBase> p = getPlayer();
     if (p == 0) return UNKNOWN_ERROR;

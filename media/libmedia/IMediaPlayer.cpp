@@ -50,6 +50,9 @@ enum {
 #ifdef OMAP_ENHANCEMENT
     REQUEST_CLONE_MODE
 #endif
+#ifdef BOARD_HAVE_HDMI
+    REQUEST_CLONE_MODE
+#endif
 };
 
 class BpMediaPlayer: public BpInterface<IMediaPlayer>
@@ -254,6 +257,15 @@ public:
         return reply.readInt32();
     }
 
+#endif
+#ifdef BOARD_HAVE_HDMI
+    status_t requestVideoCloneMode(bool enable) {
+        Parcel data, reply;
+        data.writeInterfaceToken(IMediaPlayer::getInterfaceDescriptor());
+        data.writeInt32((int)enable);
+        remote()->transact(REQUEST_CLONE_MODE, data, &reply);
+        return reply.readInt32();
+    }
 #endif
 };
 

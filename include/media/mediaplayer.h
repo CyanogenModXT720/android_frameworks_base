@@ -178,6 +178,9 @@ public:
 #ifdef OMAP_ENHANCEMENT
             status_t        requestVideoCloneMode(bool enable);
 #endif
+#ifdef BOARD_HAVE_HDMI
+            status_t        requestVideoCloneMode(bool enable);
+#endif
 private:
             void            clear_l();
             status_t        seekTo_l(int msec);

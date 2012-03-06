@@ -53,6 +53,9 @@ protected:
         SET_DISPLAY_ID,
         REQUEST_OVERLAY_CLONE
 #endif
+#ifdef BOARD_HAVE_HDMI
+	SET_DISPLAY_ID
+#endif
     };
 
 public: 
@@ -119,6 +122,9 @@ public:
             uint32_t w, uint32_t h, int32_t format, int32_t orientation, int isS3D) = 0;
     virtual void setDisplayId(int displayId) = 0;
     virtual int  requestOverlayClone(bool enable) = 0;
+#endif
+#ifdef BOARD_HAVE_HDMI
+//    virtual void setDisplayId(int displayId) = 0;
 #endif
 
 };

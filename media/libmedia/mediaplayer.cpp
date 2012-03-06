@@ -527,7 +527,17 @@ status_t MediaPlayer::requestVideoCloneMode(bool enable)
 }
 
 #endif
+#ifdef BOARD_HAVE_HDMI
+status_t MediaPlayer::requestVideoCloneMode(bool enable)
+{
+    Mutex::Autolock _l(mLock);
+    if (mPlayer != NULL) {
+        return mPlayer->requestVideoCloneMode(enable);
+    }
+    return OK;
+}
 
+#endif
 status_t MediaPlayer::setAudioSessionId(int sessionId)
 {
     LOGV("MediaPlayer::setAudioSessionId(%d)", sessionId);
