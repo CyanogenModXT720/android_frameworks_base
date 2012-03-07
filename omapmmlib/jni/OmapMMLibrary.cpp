@@ -181,7 +181,7 @@ static void OmapMMLibrary_setDisplayId(JNIEnv* env, jclass clazz, int displayId)
         }
     }
     if (omapmmlib.mSurface != NULL) {
-        omapmmlib.mSurface->setDisplayId(displayId);
+        // omapmmlib.mSurface->setDisplayId(displayId);
     }
     return;
 }

@@ -182,6 +182,20 @@ public:
     }
 #endif
 #ifdef BOARD_HAVE_HDMI
+   virtual sp<OverlayRef> createOverlay(
+             uint32_t w, uint32_t h, int32_t format, int32_t orientation, int isS3D)
+    {
+        Parcel data, reply;
+        data.writeInterfaceToken(ISurface::getInterfaceDescriptor());
+        data.writeInt32(w);
+        data.writeInt32(h);
+        data.writeInt32(format);
+        data.writeInt32(orientation);
+            data.writeInt32(isS3D);
+        remote()->transact(CREATE_OVERLAY_S3D, data, &reply);
+        return OverlayRef::readFromParcel(reply);
+    }
+
     virtual void setDisplayId(int displayId) {
         Parcel data, reply;
         data.writeInterfaceToken(ISurface::getInterfaceDescriptor());
@@ -189,6 +203,20 @@ public:
         remote()->transact(SET_DISPLAY_ID, data, &reply);
         return;
     }
+
+    virtual int requestOverlayClone(bool enable) {
+        Parcel data, reply;
+        data.writeInterfaceToken(ISurface::getInterfaceDescriptor());
+        data.writeInt32((int)enable);
+        remote()->transact(REQUEST_OVERLAY_CLONE, data, &reply);
+        if (enable) {
+            return (dup(reply.readFileDescriptor()));
+        }
+        else {
+            return -1;
+        }
+    }
+
 #endif
 };
 
@@ -291,7 +319,7 @@ status_t BnSurface::onTransact(
 //            CHECK_INTERFACE(ISurface, data, reply);
 //            int dpy = data.readInt32();
 //            setDisplayId(dpy);
-//            return NO_ERROR;
+//           return NO_ERROR;
 //        } break;
 
 #endif

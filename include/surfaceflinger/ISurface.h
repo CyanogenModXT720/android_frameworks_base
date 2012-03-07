@@ -54,7 +54,9 @@ protected:
         REQUEST_OVERLAY_CLONE
 #endif
 #ifdef BOARD_HAVE_HDMI
-	SET_DISPLAY_ID
+        CREATE_OVERLAY_S3D,
+        SET_DISPLAY_ID,
+        REQUEST_OVERLAY_CLONE
 #endif
     };
 
@@ -124,7 +126,11 @@ public:
     virtual int  requestOverlayClone(bool enable) = 0;
 #endif
 #ifdef BOARD_HAVE_HDMI
+//    virtual sp<OverlayRef> createOverlay(
+//           uint32_t w, uint32_t h, int32_t format, int32_t orientation, int isS3D) = 0;
 //    virtual void setDisplayId(int displayId) = 0;
+//   virtual int  requestOverlayClone(bool enable) = 0;
+
 #endif
 
 };
