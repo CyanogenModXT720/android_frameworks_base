@@ -1271,7 +1271,7 @@ public class StatusBarService extends Service implements CommandQueue.Callbacks 
                                                                 // Brightness set from the 90% of pixels in the middle of screen, can't always get to the edges
                                                                 int new_brightness = (int)(((x - (screen_width * 0.05f))/(screen_width * 0.9f)) * (float)android.os.Power.BRIGHTNESS_ON );
                                                                 // don't let screen go completely dim or past 100% bright
-                                                                if (new_brightness < 6) new_brightness = 6;
+                                                                if (new_brightness < 4) new_brightness = 4;
                                                                 if (new_brightness > android.os.Power.BRIGHTNESS_ON ) new_brightness = android.os.Power.BRIGHTNESS_ON;
                                                                 // Set the brightness
                                                                 try {
