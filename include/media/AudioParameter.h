@@ -46,6 +46,9 @@ public:
     static const char *keyChannels;
     static const char *keyFrameCount;
     static const char *keyInputSource;
+    static const char *keyFMLaunch;
+    static const char *keyFMRouting;
+    static const char *keyHDMIRouting;
 
     String8 toString();
 

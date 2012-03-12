@@ -29,6 +29,9 @@ const char *AudioParameter::keyFormat = "format";
 const char *AudioParameter::keyChannels = "channels";
 const char *AudioParameter::keyFrameCount = "frame_count";
 const char *AudioParameter::keyInputSource = "input_source";
+const char *AudioParameter::keyFMLaunch = "FM_launch";
+const char *AudioParameter::keyFMRouting = "FM_routing";
+const char *AudioParameter::keyHDMIRouting ="HDMI_routing";
 
 AudioParameter::AudioParameter(const String8& keyValuePairs)
 {
