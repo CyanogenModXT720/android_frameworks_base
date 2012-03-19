@@ -43,7 +43,7 @@ public:
           mManifestPackageNameOverride(NULL), mInstrumentationPackageNameOverride(NULL),
           mAutoAddOverlay(false), mAssetSourceDir(NULL), mProguardFile(NULL),
           mAndroidManifestFile(NULL), mPublicOutputFile(NULL),
-          mRClassDir(NULL), mResourceIntermediatesDir(NULL),
+          mRClassDir(NULL), mResourceIntermediatesDir(NULL), mManifestMinSdkVersion(NULL),
           mMinSdkVersion(NULL), mTargetSdkVersion(NULL), mMaxSdkVersion(NULL),
           mVersionCode(NULL), mVersionName(NULL), mCustomPackage(NULL),
           mMaxResVersion(NULL), mDebugMode(false), mNonConstantId(false), mProduct(NULL),
@@ -124,9 +124,8 @@ public:
     const android::Vector<const char*>& getNoCompressExtensions() const { return mNoCompressExtensions; }
     void addNoCompressExtension(const char* ext) { mNoCompressExtensions.add(ext); }
 
-    const char*  getManifestMinSdkVersion() const { return mManifestMinSdkVersion.string(); }
-    void setManifestMinSdkVersion(const char*  val)
-                                          { mManifestMinSdkVersion = android::String8(val); }
+    const char*  getManifestMinSdkVersion() const { return mManifestMinSdkVersion; }
+    void setManifestMinSdkVersion(const char*  val) { mManifestMinSdkVersion = val; }
     const char*  getMinSdkVersion() const { return mMinSdkVersion; }
     void setMinSdkVersion(const char*  val) { mMinSdkVersion = val; }
     const char*  getTargetSdkVersion() const { return mTargetSdkVersion; }
@@ -186,8 +185,8 @@ public:
          * the minimum SDK version is assumed to be 1.
          */
         const char *minVer;
-        if (mManifestMinSdkVersion.size() == 0) {
-            minVer = NULL;
+        if (mManifestMinSdkVersion != NULL) {
+            minVer = mManifestMinSdkVersion;
         } else if (mMinSdkVersion != NULL) {
             minVer = mMinSdkVersion;
         } else {
@@ -237,7 +236,7 @@ private:
     android::Vector<const char*> mNoCompressExtensions;
     android::Vector<const char*> mResourceSourceDirs;
 
-    android::String8 mManifestMinSdkVersion;
+    const char* mManifestMinSdkVersion;
     const char* mMinSdkVersion;
     const char* mTargetSdkVersion;
     const char* mMaxSdkVersion;
