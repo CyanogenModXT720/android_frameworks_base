@@ -43,12 +43,18 @@ namespace android {
 MemoryHeapBase::MemoryHeapBase()
     : mFD(-1), mSize(0), mBase(MAP_FAILED),
       mDevice(NULL), mNeedUnmap(false)
+#ifndef BINDER_COMPAT
+    , mOffset(0)
+#endif
 {
 }
 
 MemoryHeapBase::MemoryHeapBase(size_t size, uint32_t flags, char const * name)
     : mFD(-1), mSize(0), mBase(MAP_FAILED), mFlags(flags),
       mDevice(0), mNeedUnmap(false)
+#ifndef BINDER_COMPAT
+    , mOffset(0)
+#endif
 {
     //LOGD("%s: size=%d, flags=%x, name=%s", __FUNCTION__, size, flags, name);
     const size_t pagesize = getpagesize();
@@ -67,6 +73,9 @@ MemoryHeapBase::MemoryHeapBase(size_t size, uint32_t flags, char const * name)
 MemoryHeapBase::MemoryHeapBase(const char* device, size_t size, uint32_t flags)
     : mFD(-1), mSize(0), mBase(MAP_FAILED), mFlags(flags),
       mDevice(0), mNeedUnmap(false)
+#ifndef BINDER_COMPAT
+    , mOffset(0)
+#endif
 {
     //LOGD("%s: device=%s, size=%d, flags=%x", __FUNCTION__, device, size, flags);
     int open_flags = O_RDWR;
@@ -87,6 +96,9 @@ MemoryHeapBase::MemoryHeapBase(const char* device, size_t size, uint32_t flags)
 MemoryHeapBase::MemoryHeapBase(int fd, size_t size, uint32_t flags, uint32_t offset)
     : mFD(-1), mSize(0), mBase(MAP_FAILED), mFlags(flags),
       mDevice(0), mNeedUnmap(false)
+#ifndef BINDER_COMPAT
+    , mOffset(0)
+#endif
 {
     //LOGD("%s: fd=%d, size=%d, flags=%x, offset=%d", __FUNCTION__, fd, size, flags, offset);
     const size_t pagesize = getpagesize();
@@ -156,6 +168,9 @@ status_t MemoryHeapBase::mapfd(int fd, size_t size, uint32_t offset)
     }
     mFD = fd;
     mSize = size;
+#ifndef BINDER_COMPAT
+    mOffset = offset;
+#endif
     return NO_ERROR;
 }
 
@@ -197,6 +212,12 @@ uint32_t MemoryHeapBase::getFlags() const {
 const char* MemoryHeapBase::getDevice() const {
     return mDevice;
 }
+
+#ifndef BINDER_COMPAT
+uint32_t MemoryHeapBase::getOffset() const {
+    return mOffset;
+}
+#endif
 
 // ---------------------------------------------------------------------------
 }; // namespace android
