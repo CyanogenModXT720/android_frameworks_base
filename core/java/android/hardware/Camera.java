@@ -125,7 +125,7 @@ public class Camera {
     private static final int CAMERA_MSG_RAW_IMAGE        = 0x080;
     private static final int CAMERA_MSG_COMPRESSED_IMAGE = 0x100;
     private static final int CAMERA_MSG_FACE_DETECTION   = 0x200;
-    private static final int CAMERA_MSG_ALL_MSGS         = 0x1FF;
+    private static final int CAMERA_MSG_ALL_MSGS         = 0x3FF;
 
     private int mNativeContext; // accessed by native methods
     private EventHandler mEventHandler;
@@ -920,8 +920,8 @@ public class Camera {
         private static final String KEY_JPEG_THUMBNAIL_WIDTH = "jpeg-thumbnail-width";
         private static final String KEY_JPEG_THUMBNAIL_HEIGHT = "jpeg-thumbnail-height";
         private static final String KEY_JPEG_THUMBNAIL_QUALITY = "jpeg-thumbnail-quality";
-        private static final String KEY_JPEG_QUALITY = "image-quality";
-        private static final String KEY_ROTATION = "picture-rotation";
+        private static final String KEY_JPEG_QUALITY = "jpeg-quality";
+        private static final String KEY_ROTATION = "rotation";
         private static final String KEY_GPS_LATITUDE = "gps-latitude";
         private static final String KEY_GPS_LONGITUDE = "gps-longitude";
         private static final String KEY_GPS_ALTITUDE = "gps-altitude";
