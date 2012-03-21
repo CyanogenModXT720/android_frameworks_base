@@ -853,6 +853,9 @@ class PackageManagerService extends IPackageManager.Stub {
                 // code, so don't dexopt it to avoid the resulting log spew.
                 libFiles.add(mFrameworkDir.getPath() + "/framework-res.apk");
 
+		// also don't dexopt motorola's mot-framework-res.apk
+                libFiles.add(mFrameworkDir.getPath() + "/mot-framework-res.apk");
+
                 /**
                  * And there are a number of commands implemented in Java, which
                  * we currently need to do the dexopt on so that they can be
