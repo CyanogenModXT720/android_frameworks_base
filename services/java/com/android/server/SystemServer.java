@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -130,6 +131,7 @@ class ServerThread extends Thread {
 
         LightsService lights = null;
         PowerManagerService power = null;
+        DynamicMemoryManagerService dmm = null;
         BatteryService battery = null;
         AlarmManagerService alarm = null;
         NetworkManagementService networkManagement = null;
@@ -149,6 +151,7 @@ class ServerThread extends Thread {
         RecognitionManagerService recognition = null;
         ThrottleService throttle = null;
         NetworkTimeUpdateService networkTimeUpdater = null;
+        CpuGovernorService cpuGovernorManager = null;
 
         // Critical services...
         try {
@@ -266,6 +269,16 @@ class ServerThread extends Thread {
                 }
             }
 
+            if (SystemProperties.QCOM_HARDWARE) {
+                Slog.i(TAG, "DynamicMemoryManager Service");
+                dmm = new DynamicMemoryManagerService(context);
+
+                cpuGovernorManager = new CpuGovernorService(context);
+
+                if (cpuGovernorManager == null) {
+                    Slog.e(TAG, "CpuGovernorService failed to start");
+                }
+            }
         } catch (RuntimeException e) {
             Slog.e("System", "******************************************");
             Slog.e("System", "************ Failure starting core service", e);
