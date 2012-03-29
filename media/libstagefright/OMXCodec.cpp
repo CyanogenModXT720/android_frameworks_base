@@ -490,10 +490,6 @@ uint32_t OMXCodec::getComponentQuirks(
         // 128 byte alignment.
         quirks |= kRequiresAllocateBufferOnInputPorts;
         quirks |= kInputBufferSizesAreBogus;
-
-        if(kPreferThumbnailMode) {
-                quirks |= OMXCodec::kRequiresAllocateBufferOnOutputPorts;
-        }
     }
     if (!strcmp(componentName, "OMX.TI.DUCATI1.VIDEO.DECODER")) {
         quirks |= kRequiresAllocateBufferOnInputPorts;
