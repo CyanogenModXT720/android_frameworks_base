@@ -70,6 +70,8 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
 import android.widget.Toast;
 
+import com.android.internal.app.ThemeUtils;
+
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -102,6 +104,7 @@ public class NotificationManagerService extends INotificationManager.Stub
     private static final int DEFAULT_STREAM_TYPE = AudioManager.STREAM_NOTIFICATION;
 
     final Context mContext;
+    Context mUiContext;
     final IActivityManager mAm;
     final IBinder mForegroundToken = new Binder();
 
@@ -420,6 +423,13 @@ public class NotificationManagerService extends INotificationManager.Stub
             } catch (RemoteException e) {
             }
             Binder.restoreCallingIdentity(ident);
+        }
+    };
+
+    private BroadcastReceiver mThemeChangeReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            mUiContext = null;
         }
     };
 
@@ -811,6 +821,8 @@ public class NotificationManagerService extends INotificationManager.Stub
         mContext.registerReceiver(mIntentReceiver, sdFilter);
         IntentFilter ledFilter = new IntentFilter(ACTION_UPDATE_LED);
         mContext.registerReceiver(mIntentReceiver, ledFilter);
+
+        ThemeUtils.registerThemeChangeReceiver(mContext, mThemeChangeReceiver);
 
         SettingsObserver observer = new SettingsObserver(mHandler);
         observer.observe();
@@ -1840,7 +1852,7 @@ public class NotificationManagerService extends INotificationManager.Stub
                     PendingIntent pi = PendingIntent.getActivity(mContext, 0,
                             intent, 0);
 
-                    mAdbNotification.setLatestEventInfo(mContext, title, message, pi);
+                    mAdbNotification.setLatestEventInfo(getUiContext(), title, message, pi);
 
                     mAdbNotificationShown = true;
                     mAdbNotificationIsUsb = !networkEnabled;
@@ -1856,6 +1868,13 @@ public class NotificationManagerService extends INotificationManager.Stub
                 notificationManager.cancel(mAdbNotification.icon);
             }
         }
+    }
+
+    private Context getUiContext() {
+        if (mUiContext == null) {
+            mUiContext = ThemeUtils.createUiContext(mContext);
+        }
+        return mUiContext != null ? mUiContext : mContext;
     }
 
     private void updateNotificationPulse() {
