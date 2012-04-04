@@ -6,7 +6,7 @@ ifeq ($(TARGET_BOARD_PLATFORM),msm7x27a)
     LOCAL_CFLAGS += -DUSE_AAC_HW_DEC
 endif
 
-ifeq ($(TARGET_BOARD_PLATFORM),msm7k)
+ifeq ($(TARGET_BOARD_PLATFORM),msm7x27)
     LOCAL_CFLAGS += -DTARGET7x27
 endif
 ifeq ($(TARGET_BOARD_PLATFORM),msm7x27a)
@@ -188,7 +188,6 @@ ifeq ($(BOARD_USES_QCOM_HARDWARE),true)
         LOCAL_C_INCLUDES += $(TOP)/vendor/qcom/opensource/omx/mm-core/omxcore/inc
         LOCAL_C_INCLUDES += $(TOP)/system/core/include
         LOCAL_C_INCLUDES += $(TOP)/hardware/libhardware_legacy/include
-        LOCAL_CFLAGS += -DQCOM_HARDWARE
 endif
 
 LOCAL_MODULE:= libstagefright
