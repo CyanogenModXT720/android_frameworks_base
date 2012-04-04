@@ -470,7 +470,9 @@ public class QwertyKeyListener extends BaseKeyListener {
 
         if (count > 0 && selStart == selEnd && selStart > 0) {
             char c = content.charAt(selStart - 1);
-            String set = PICKER_SETS.get(i);
+            //String set = PICKER_SETS.get(i);
+            Integer resId = SYM_PICKER_RES_ID.get(i); 
+            String set = view.getContext().getString(resId);
             if (count > 1 && set != null &&
                     (c == set.charAt(0) || c == Character.toUpperCase(set.charAt(0)))) {
                 adjustMetaAfterKeypress(content);
