@@ -48,9 +48,6 @@ public:
     int32_t heapID() const { return getHeapID(); }
     void*   base() const  { return getBase(); }
     size_t  virtualSize() const { return getSize(); }
-#if defined(OMAP_ENHANCEMENT)
-    virtual uint32_t    getOffset() const = 0;
-#endif
 };
 
 class BnMemoryHeap : public BnInterface<IMemoryHeap>

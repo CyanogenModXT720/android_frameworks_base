@@ -40,22 +40,16 @@ namespace android {
 
 // ---------------------------------------------------------------------------
 
-MemoryHeapBase::MemoryHeapBase()
+MemoryHeapBase::MemoryHeapBase() 
     : mFD(-1), mSize(0), mBase(MAP_FAILED),
-      mDevice(NULL), mNeedUnmap(false)
+      mDevice(NULL), mNeedUnmap(false) 
 {
-#if defined(OMAP_ENHANCEMENT)
-    mOffset = 0;
-#endif
 }
 
 MemoryHeapBase::MemoryHeapBase(size_t size, uint32_t flags, char const * name)
     : mFD(-1), mSize(0), mBase(MAP_FAILED), mFlags(flags),
       mDevice(0), mNeedUnmap(false)
 {
-#if defined(OMAP_ENHANCEMENT)
-    mOffset = 0;
-#endif
     const size_t pagesize = getpagesize();
     size = ((size + pagesize-1) & ~(pagesize-1));
     int fd = ashmem_create_region(name == NULL ? "MemoryHeapBase" : name, size);
@@ -73,10 +67,6 @@ MemoryHeapBase::MemoryHeapBase(const char* device, size_t size, uint32_t flags)
     : mFD(-1), mSize(0), mBase(MAP_FAILED), mFlags(flags),
       mDevice(0), mNeedUnmap(false)
 {
-#if defined(OMAP_ENHANCEMENT)
-    mOffset = 0;
-#endif
-
     int open_flags = O_RDWR;
     if (flags & NO_CACHING)
         open_flags |= O_SYNC;
@@ -96,9 +86,6 @@ MemoryHeapBase::MemoryHeapBase(int fd, size_t size, uint32_t flags, uint32_t off
     : mFD(-1), mSize(0), mBase(MAP_FAILED), mFlags(flags),
       mDevice(0), mNeedUnmap(false)
 {
-#if defined(OMAP_ENHANCEMENT)
-    mOffset = 0;
-#endif
     const size_t pagesize = getpagesize();
     size = ((size + pagesize-1) & ~(pagesize-1));
     mapfd(dup(fd), size, offset);
@@ -154,9 +141,6 @@ status_t MemoryHeapBase::mapfd(int fd, size_t size, uint32_t offset)
     }
     mFD = fd;
     mSize = size;
-#if defined(OMAP_ENHANCEMENT)
-    mOffset = offset;
-#endif
     return NO_ERROR;
 }
 
@@ -199,10 +183,5 @@ const char* MemoryHeapBase::getDevice() const {
     return mDevice;
 }
 
-#if defined(OMAP_ENHANCEMENT)
-uint32_t MemoryHeapBase::getOffset() const {
-    return mOffset;
-}
-#endif
 // ---------------------------------------------------------------------------
 }; // namespace android

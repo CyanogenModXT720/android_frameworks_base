@@ -90,13 +90,6 @@ private:
     uint32_t    mFlags;
     const char* mDevice;
     bool        mNeedUnmap;
-#if defined(OMAP_ENHANCEMENT)
-    uint32_t    mOffset;
-
-public:
-    virtual uint32_t getOffset() const;
-
-#endif
 };
 
 // ---------------------------------------------------------------------------
