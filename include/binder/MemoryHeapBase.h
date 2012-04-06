@@ -90,7 +90,7 @@ private:
     uint32_t    mFlags;
     const char* mDevice;
     bool        mNeedUnmap;
-#if defined(OMAP_ENHANCEMENT)
+#if defined(BOARD_HAVE_HDMI)
     uint32_t    mOffset;
 
 public:

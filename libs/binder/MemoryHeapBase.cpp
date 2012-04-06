@@ -44,7 +44,7 @@ MemoryHeapBase::MemoryHeapBase()
     : mFD(-1), mSize(0), mBase(MAP_FAILED),
       mDevice(NULL), mNeedUnmap(false)
 {
-#if defined(OMAP_ENHANCEMENT)
+#if defined(BOARD_HAVE_HDMI)
     mOffset = 0;
 #endif
 }
@@ -53,7 +53,7 @@ MemoryHeapBase::MemoryHeapBase(size_t size, uint32_t flags, char const * name)
     : mFD(-1), mSize(0), mBase(MAP_FAILED), mFlags(flags),
       mDevice(0), mNeedUnmap(false)
 {
-#if defined(OMAP_ENHANCEMENT)
+#if defined(BOARD_HAVE_HDMI)
     mOffset = 0;
 #endif
     const size_t pagesize = getpagesize();
@@ -73,7 +73,7 @@ MemoryHeapBase::MemoryHeapBase(const char* device, size_t size, uint32_t flags)
     : mFD(-1), mSize(0), mBase(MAP_FAILED), mFlags(flags),
       mDevice(0), mNeedUnmap(false)
 {
-#if defined(OMAP_ENHANCEMENT)
+#if defined(BOARD_HAVE_HDMI)
     mOffset = 0;
 #endif
 
@@ -96,7 +96,7 @@ MemoryHeapBase::MemoryHeapBase(int fd, size_t size, uint32_t flags, uint32_t off
     : mFD(-1), mSize(0), mBase(MAP_FAILED), mFlags(flags),
       mDevice(0), mNeedUnmap(false)
 {
-#if defined(OMAP_ENHANCEMENT)
+#if defined(BOARD_HAVE_HDMI)
     mOffset = 0;
 #endif
     const size_t pagesize = getpagesize();
@@ -154,7 +154,7 @@ status_t MemoryHeapBase::mapfd(int fd, size_t size, uint32_t offset)
     }
     mFD = fd;
     mSize = size;
-#if defined(OMAP_ENHANCEMENT)
+#if defined(BOARD_HAVE_HDMI)
     mOffset = offset;
 #endif
     return NO_ERROR;
@@ -199,7 +199,7 @@ const char* MemoryHeapBase::getDevice() const {
     return mDevice;
 }
 
-#if defined(OMAP_ENHANCEMENT)
+#if defined(BOARD_HAVE_HDMI)
 uint32_t MemoryHeapBase::getOffset() const {
     return mOffset;
 }

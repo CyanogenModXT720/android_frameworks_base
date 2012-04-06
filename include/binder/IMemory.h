@@ -48,7 +48,7 @@ public:
     int32_t heapID() const { return getHeapID(); }
     void*   base() const  { return getBase(); }
     size_t  virtualSize() const { return getSize(); }
-#if defined(OMAP_ENHANCEMENT)
+#if defined(BOARD_HAVE_HDMI)
     virtual uint32_t    getOffset() const = 0;
 #endif
 };
