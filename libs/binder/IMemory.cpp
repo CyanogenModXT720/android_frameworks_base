@@ -109,7 +109,7 @@ private:
     mutable uint32_t    mFlags;
     mutable bool        mRealHeap;
     mutable Mutex       mLock;
-#if defined(BOARD_HAVE_HDMI)
+#if defined(OMAP_ENHANCEMENT)
     mutable uint32_t    mOffset;
 
 public:
@@ -239,7 +239,7 @@ BpMemoryHeap::BpMemoryHeap(const sp<IBinder>& impl)
     : BpInterface<IMemoryHeap>(impl),
         mHeapId(-1), mBase(MAP_FAILED), mSize(0), mFlags(0), mRealHeap(false)
 {
-#if defined(BOARD_HAVE_HDMI)
+#if defined(OMAP_ENHANCEMENT)
     mOffset = 0;
 #endif
 }
@@ -281,7 +281,7 @@ void BpMemoryHeap::assertMapped() const
             if (mHeapId == -1) {
                 mBase   = heap->mBase;
                 mSize   = heap->mSize;
-#if defined(BOARD_HAVE_HDMI)
+#if defined(OMAP_ENHANCEMENT)
                 mOffset   = heap->mOffset;
 #endif
                 android_atomic_write( dup( heap->mHeapId ), &mHeapId );
@@ -307,7 +307,7 @@ void BpMemoryHeap::assertReallyMapped() const
         int parcel_fd = reply.readFileDescriptor();
         ssize_t size = reply.readInt32();
         uint32_t flags = reply.readInt32();
-#if defined(BOARD_HAVE_HDMI)
+#if defined(OMAP_ENHANCEMENT)
         uint32_t offset = reply.readInt32();
 #endif
         LOGE_IF(err, "binder=%p transaction failed fd=%d, size=%ld, err=%d (%s)",
@@ -325,7 +325,7 @@ void BpMemoryHeap::assertReallyMapped() const
         Mutex::Autolock _l(mLock);
         if (mHeapId == -1) {
             mRealHeap = true;
-#if defined(BOARD_HAVE_HDMI)
+#if defined(OMAP_ENHANCEMENT)
             mBase = mmap(0, size, access, MAP_SHARED, fd, offset);
 #else
             mBase = mmap(0, size, access, MAP_SHARED, fd, 0);
@@ -337,7 +337,7 @@ void BpMemoryHeap::assertReallyMapped() const
             } else {
                 mSize = size;
                 mFlags = flags;
-#if defined(BOARD_HAVE_HDMI)
+#if defined(OMAP_ENHANCEMENT)
                 mOffset = offset;
 #endif
                 android_atomic_write(fd, &mHeapId);
@@ -366,7 +366,7 @@ uint32_t BpMemoryHeap::getFlags() const {
     return mFlags;
 }
 
-#if defined(BOARD_HAVE_HDMI)
+#if defined(OMAP_ENHANCEMENT)
 uint32_t BpMemoryHeap::getOffset() const {
     assertMapped();
     return mOffset;
@@ -392,7 +392,7 @@ status_t BnMemoryHeap::onTransact(
             reply->writeFileDescriptor(getHeapID());
             reply->writeInt32(getSize());
             reply->writeInt32(getFlags());
-#if defined(BOARD_HAVE_HDMI)
+#if defined(OMAP_ENHANCEMENT)
             reply->writeInt32(getOffset());
 #endif
             return NO_ERROR;
