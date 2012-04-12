@@ -3250,7 +3250,7 @@ public final class ActivityManagerService extends ActivityManagerNative
         if (callerUid == Process.SYSTEM_UID) {
             synchronized (this) {
                 ProcessRecord app = getProcessRecordLocked(processName, uid);
-                if (app != null) {
+                if (app != null && app.thread != null) {
                     try {
                         app.thread.scheduleSuicide();
                     } catch (RemoteException e) {
@@ -3347,6 +3347,11 @@ public final class ActivityManagerService extends ActivityManagerNative
             ActivityRecord r = (ActivityRecord)mMainStack.mHistory.get(i);
             if (r.packageName.equals(name)) {
                 if (!doit) {
+                    if (r.finishing) {
+                        // If this activity is just finishing, then it is not
+                        // interesting as far as something to stop.
+                        continue;
+                    }
                     return true;
                 }
                 didSomething = true;
@@ -3675,6 +3680,8 @@ public final class ActivityManagerService extends ActivityManagerNative
                 logBroadcastReceiverDiscardLocked(br);
                 br.finishReceiver();
                 scheduleBroadcastsLocked();
+                // We need to reset the state if we fails to start the receiver.
+                br.state = BroadcastRecord.IDLE;
             }
         }
 
@@ -4903,7 +4910,13 @@ public final class ActivityManagerService extends ActivityManagerNative
                             maxNum < N ? maxNum : N);
             for (int i=0; i<N && maxNum > 0; i++) {
                 TaskRecord tr = mRecentTasks.get(i);
-                if (((flags&ActivityManager.RECENT_WITH_EXCLUDED) != 0)
+                // Return the entry if desired by the caller.  We always return
+                // the first entry, because callers always expect this to be the
+                // forground app.  We may filter others if the caller has
+                // not supplied RECENT_WITH_EXCLUDED and there is some reason
+                // we should exclude the entry.
+                if (i == 0
+                        || ((flags&ActivityManager.RECENT_WITH_EXCLUDED) != 0)
                         || (tr.intent == null)
                         || ((tr.intent.getFlags()
                                 &Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS) == 0)) {
@@ -6464,8 +6477,10 @@ public final class ActivityManagerService extends ActivityManagerNative
                 mProcessCrashTimes.remove(app.info.processName, app.info.uid);
                 app.removed = true;
                 removeProcessLocked(app, false);
+                mMainStack.resumeTopActivityLocked(null);
                 return false;
             }
+            mMainStack.resumeTopActivityLocked(null);
         } else {
             ActivityRecord r = mMainStack.topRunningActivityLocked(null);
             if (r.app == app) {
@@ -12170,6 +12185,7 @@ public final class ActivityManagerService extends ActivityManagerNative
         final boolean wasKeeping = app.keeping;
 
         int adj = computeOomAdjLocked(app, hiddenAdj, TOP_APP, false);
+        boolean success = true;
 
         if ((app.pid != 0 && app.pid != MY_PID) || Process.supportsProcesses()) {
             if (app.curRawAdj != app.setRawAdj) {
@@ -12202,11 +12218,12 @@ public final class ActivityManagerService extends ActivityManagerNative
             if (adj != app.setAdj) {
                 if (Process.setOomAdj(app.pid, adj)) {
                     if (DEBUG_SWITCH || DEBUG_OOM_ADJ) Slog.v(
-                        TAG, "Set app " + app.processName +
-                        " oom adj to " + adj);
-                    app.setAdj = adj;
+                    TAG, "Set " + app.pid + " " + app.processName +
+                    " adj " + app.curAdj + ": " + app.adjType);
+                app.setAdj = app.curAdj;
                 } else {
-                    return false;
+                success = false;
+                Slog.w(TAG, "Failed setting oom adj of " + app + " to " + app.curAdj);
                 }
             }
             if (app.setSchedGroup != app.curSchedGroup) {
@@ -12225,8 +12242,7 @@ public final class ActivityManagerService extends ActivityManagerNative
                     } finally {
                         Binder.restoreCallingIdentity(oldId);
                     }
-                }
-                if (false) {
+                } else {
                     if (app.thread != null) {
                         try {
                             app.thread.setSchedulingGroup(app.curSchedGroup);
@@ -12237,7 +12253,7 @@ public final class ActivityManagerService extends ActivityManagerNative
             }
         }
 
-        return true;
+        return success;
     }
 
     private final ActivityRecord resumedAppLocked() {
