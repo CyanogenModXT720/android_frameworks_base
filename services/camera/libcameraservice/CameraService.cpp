@@ -16,7 +16,7 @@
 */
 
 #define LOG_TAG "CameraService"
-//#define LOG_NDEBUG 0
+#define LOG_NDEBUG 0
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -84,7 +84,6 @@ static void htcCameraSwitch(int cameraId)
     }
 }
 #endif
-
 // This is ugly and only safe if we never re-create the CameraService, but
 // should be ok for now.
 static CameraService *gCameraService;
@@ -179,7 +178,6 @@ sp<ICamera> CameraService::connect(
 #if defined(BOARD_HAVE_HTC_FFC)
     htcCameraSwitch(cameraId);
 #endif
-
     Mutex::Autolock lock(mServiceLock);
     if (mClient[cameraId] != 0) {
         client = mClient[cameraId].promote();
@@ -365,7 +363,6 @@ CameraService::Client::Client(const sp<CameraService>& cameraService,
     mCameraFacing = cameraFacing;
     mClientPid = clientPid;
     mMsgEnabled = 0;
-    mburstCnt = 0;
     mSurface = 0;
     mPreviewWindow = 0;
     mHardware->setCallbacks(notifyCallback,
@@ -522,12 +519,15 @@ void CameraService::Client::disconnect() {
 
     // Release the held ANativeWindow resources.
     if (mPreviewWindow != 0) {
+        LOG1("disconnectWindow()");
         disconnectWindow(mPreviewWindow);
         mPreviewWindow = 0;
         mHardware->setPreviewWindow(mPreviewWindow);
     }
+    LOG1("clear()");
     mHardware.clear();
 
+    LOG1("removeClient()");
     mCameraService->removeClient(mCameraClient);
     mCameraService->setCameraFree(mCameraId);
 
@@ -623,7 +623,6 @@ void CameraService::Client::setPreviewCallbackFlag(int callback_flag) {
 // start preview mode
 status_t CameraService::Client::startPreview() {
     LOG1("startPreview (pid %d)", getCallingPid());
-    enableMsgType(CAMERA_MSG_PREVIEW_METADATA);
     return startCameraMode(CAMERA_PREVIEW_MODE);
 }
 
@@ -709,7 +708,6 @@ status_t CameraService::Client::startRecordingMode() {
 // stop preview mode
 void CameraService::Client::stopPreview() {
     LOG1("stopPreview (pid %d)", getCallingPid());
-    disableMsgType(CAMERA_MSG_PREVIEW_METADATA);
     Mutex::Autolock lock(mLock);
     if (checkPidAndHardware() != NO_ERROR) return;
 
@@ -788,7 +786,6 @@ status_t CameraService::Client::cancelAutoFocus() {
 
 // take a picture - image is returned in callback
 status_t CameraService::Client::takePicture(int msgType) {
-    char prop[PROPERTY_VALUE_MAX];
     LOG1("takePicture (pid %d): 0x%x", getCallingPid(), msgType);
 
     Mutex::Autolock lock(mLock);
@@ -810,15 +807,9 @@ status_t CameraService::Client::takePicture(int msgType) {
                            CAMERA_MSG_RAW_IMAGE |
                            CAMERA_MSG_RAW_IMAGE_NOTIFY |
                            CAMERA_MSG_COMPRESSED_IMAGE);
-    disableMsgType(CAMERA_MSG_PREVIEW_METADATA);
+
     enableMsgType(picMsgType);
-    memset(prop, 0, sizeof(prop));
-    property_get("persist.camera.snapshot.number", prop, "0");
-    mburstCnt = atoi(prop);
-    if (!mburstCnt) {
-        mburstCnt = mHardware->getParameters().getInt("num-snaps-per-shutter");
-    }
-    LOG1("mburstCnt = %d", mburstCnt);
+
     return mHardware->takePicture();
 }
 
@@ -908,13 +899,6 @@ status_t CameraService::Client::sendCommand(int32_t cmd, int32_t arg1, int32_t a
     } else if (cmd == CAMERA_CMD_PLAY_RECORDING_SOUND) {
         mCameraService->playSound(SOUND_RECORDING);
     }
-    else if (cmd == CAMERA_CMD_HISTOGRAM_ON ) {
-        enableMsgType(CAMERA_MSG_STATS_DATA);
-    }
-    else if (cmd ==  CAMERA_CMD_HISTOGRAM_OFF) {
-        disableMsgType(CAMERA_MSG_STATS_DATA);
-    }
-
 
     return mHardware->sendCommand(cmd, arg1, arg2);
 }
@@ -1161,12 +1145,8 @@ void CameraService::Client::handleRawPicture(const sp<IMemory>& mem) {
 
 // picture callback - compressed picture ready
 void CameraService::Client::handleCompressedPicture(const sp<IMemory>& mem) {
-    if (mburstCnt) mburstCnt--;
+    disableMsgType(CAMERA_MSG_COMPRESSED_IMAGE);
 
-    if (!mburstCnt) {
-        LOG1("mburstCnt = %d", mburstCnt);
-        disableMsgType(CAMERA_MSG_COMPRESSED_IMAGE);
-    }
     sp<ICameraClient> c = mCameraClient;
     mLock.unlock();
     if (c != 0) {
