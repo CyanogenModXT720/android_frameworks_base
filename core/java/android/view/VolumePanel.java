@@ -101,8 +101,7 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
     private boolean mRingIsSilent;
     private boolean mShowCombinedVolumes;
     private boolean mVoiceCapable;
-    private int mCurrentOverlayStyle;
-    private boolean mHasNewOverlayStyle = false;
+    private int mCurrentOverlayStyle = -1;
 
     /** Dialog containing all the sliders */
     private final Dialog mDialog;
@@ -251,16 +250,16 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
         mVoiceCapable = context.getResources().getBoolean(R.bool.config_voice_capable);
 
         // get the users preference
-        mCurrentOverlayStyle = Settings.System.getInt(context.getContentResolver(),Settings.System.MODE_VOLUME_OVERLAY, Settings.System.VOLUME_OVERLAY_SINGLE);
+        int choosenStyle = Settings.System.getInt(context.getContentResolver(),Settings.System.MODE_VOLUME_OVERLAY, -1);
         // by default -1 is expected - deal with choosing the right default
-        if (mCurrentOverlayStyle == -1) {
+        if (choosenStyle == -1) {
             if (mVoiceCapable) {
-                mCurrentOverlayStyle = Settings.System.VOLUME_OVERLAY_SINGLE;
+                choosenStyle = Settings.System.VOLUME_OVERLAY_SINGLE;
             } else {
-                mCurrentOverlayStyle = Settings.System.VOLUME_OVERLAY_EXPANDABLE;
+                choosenStyle = Settings.System.VOLUME_OVERLAY_EXPANDABLE;
             }
         }
-        changeOverlayStyle(mCurrentOverlayStyle, true);
+        changeOverlayStyle(choosenStyle);
         mMoreButton.setOnClickListener(this);
 
         listenToRingerModeAndConfigChanges();
@@ -280,17 +279,16 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
                     sendMessage(obtainMessage(MSG_RINGER_MODE_CHANGED));
                 } else if (ACTION_VOLUME_OVERLAY_CHANGED.equals(action)) {
                     int state = (Integer) intent.getExtra("state");
-                    changeOverlayStyle(state, false);
+                    changeOverlayStyle(state);
                 }
             }
         }, filter);
     }
 
-    private void changeOverlayStyle(int newStyle, boolean isConstructorCall) {
+    private void changeOverlayStyle(int newStyle) {
         Log.i("VolumePanel", "changeOverlayStyle : " + newStyle);
         // Don't change to the same style
-        if (!isConstructorCall && newStyle == mCurrentOverlayStyle) return;
-        mHasNewOverlayStyle = true;
+        if (newStyle == mCurrentOverlayStyle) return;
         switch (newStyle) {
             case Settings.System.VOLUME_OVERLAY_SINGLE :
                 mMoreButton.setVisibility(View.GONE);
@@ -407,7 +405,9 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
         final int count = mSliderGroup.getChildCount();
 
         for (int i = 0; i < count; i++) {
-            mSliderGroup.getChildAt(i).setVisibility(View.VISIBLE);
+            if (mSliderGroup.getChildAt(i).getVisibility() != View.VISIBLE) {
+                mSliderGroup.getChildAt(i).setVisibility(View.VISIBLE);
+            }
         }
         mMoreButton.setVisibility(View.GONE);
         mDivider.setVisibility(View.GONE);
@@ -590,7 +590,7 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
                 collapse();
             }
             // If just changed the style and we need to expand
-            if (mHasNewOverlayStyle && mCurrentOverlayStyle == Settings.System.VOLUME_OVERLAY_EXPANDED) {
+            if (mCurrentOverlayStyle == Settings.System.VOLUME_OVERLAY_EXPANDED) {
                 expand();
             }
             mDialog.show();
@@ -796,3 +796,4 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
         resetTimeout();
     }
 }
+

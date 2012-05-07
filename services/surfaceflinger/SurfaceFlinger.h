@@ -221,6 +221,8 @@ public:
 
     GLuint getProtectedTexName() const { return mProtectedTexName; }
 
+    inline int  getUseDithering() const { return mUseDithering; }
+
 
     class MessageDestroyGLTexture : public MessageBase {
         GLuint texture;
@@ -315,9 +317,6 @@ private:
             void        handlePageFlip();
             bool        lockPageFlip(const LayerVector& currentLayers);
             void        unlockPageFlip(const LayerVector& currentLayers);
-#ifdef QCOM_HARDWARE
-            bool        isRotationCompleted();
-#endif
             void        handleWorkList();
             void        handleRepaint();
             void        postFramebuffer();
@@ -442,6 +441,8 @@ private:
 
    // only written in the main thread, only read in other threads
    volatile     int32_t                     mSecureFrameBuffer;
+
+                bool                        mUseDithering;
 };
 
 // ---------------------------------------------------------------------------

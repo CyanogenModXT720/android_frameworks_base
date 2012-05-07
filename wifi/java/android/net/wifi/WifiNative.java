@@ -60,6 +60,8 @@ public class WifiNative {
 
     public native static boolean loadHotspotDriver();
 
+    public native static boolean isHotspotDriverLoaded();
+
     public native static boolean unloadHotspotDriver();
 
     public native static boolean startSupplicant();

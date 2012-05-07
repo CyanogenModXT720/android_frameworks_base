@@ -149,7 +149,7 @@ Loader::Loader()
             int dpy;
             int impl;
             if (sscanf(line, "%u %u %s", &dpy, &impl, tag) == 3) {
-                LOGD(">>> %u %u %s", dpy, impl, tag);
+              //  LOGD(">>> %u %u %s", dpy, impl, tag);
                 gConfig.add( entry_t(dpy, impl, tag) );
             }
         }
@@ -240,7 +240,7 @@ void Loader::init_api(void* dso,
                 strncpy(scrap, name, index);
                 scrap[index] = 0;
                 f = (__eglMustCastToProperFunctionPointerType)dlsym(dso, scrap);
-                LOGD_IF(f, "found <%s> instead", scrap);
+              //  LOGD_IF(f, "found <%s> instead", scrap);
             }
         }
         if (f == NULL) {
@@ -249,11 +249,11 @@ void Loader::init_api(void* dso,
             if (index>0 && strcmp(name+index, "OES")) {
                 snprintf(scrap, SIZE, "%sOES", name);
                 f = (__eglMustCastToProperFunctionPointerType)dlsym(dso, scrap);
-                LOGD_IF(f, "found <%s> instead", scrap);
+              //  LOGD_IF(f, "found <%s> instead", scrap);
             }
         }
         if (f == NULL) {
-            LOGD("%s", name);
+           // LOGD("%s", name);
             f = (__eglMustCastToProperFunctionPointerType)gl_unimplemented;
         }
         *curr++ = f;

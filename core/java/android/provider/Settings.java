@@ -1529,6 +1529,18 @@ public final class Settings {
         public static final String LIGHT_FILTER_INTERVAL = "light_filter_interval";
 
         /**
+         * Whether to enable the electron beam animation when turning screen on
+         *
+         * @hide */
+        public static final String ELECTRON_BEAM_ANIMATION_ON = "electron_beam_animation_on";
+
+        /**
+         * Whether to enable the electron beam animation when turning screen off
+         *
+         * @hide */
+        public static final String ELECTRON_BEAM_ANIMATION_OFF = "electron_beam_animation_off";
+
+        /**
          * Control whether the process CPU usage meter should be shown.
          */
         public static final String SHOW_PROCESSES = "show_processes";
@@ -2264,6 +2276,12 @@ public final class Settings {
          * @hide
          */
         public static final String LOCKSCREEN_QUICK_UNLOCK_CONTROL = "lockscreen_quick_unlock_control";
+
+        /**
+         * Stores values for custom lockscreen targets
+         * @hide
+         */
+        public static final String LOCKSCREEN_TARGETS = "lockscreen_targets";
 
         /**
          * Boolean value whether to link ringtone and notification volumes
@@ -3165,6 +3183,12 @@ public final class Settings {
          * @hide
          */
         public static final String TETHER_DUN_APN = "tether_dun_apn";
+
+        /** DHCP lease time for tethering in seconds {@hide} */
+        public static final String TETHER_LEASE_TIME = "tether_lease_time";
+
+        /** Default value for TETHER_LEASE_TIME {@hide} */
+        public static final int TETHER_LEASE_TIME_DEFAULT = -1;
 
         /**
          * No longer supported.

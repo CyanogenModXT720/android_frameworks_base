@@ -16,7 +16,7 @@
 */
 
 #define LOG_TAG "CameraService"
-#define LOG_NDEBUG 0
+//#define LOG_NDEBUG 0
 
 #include <stdio.h>
 #include <sys/types.h>
