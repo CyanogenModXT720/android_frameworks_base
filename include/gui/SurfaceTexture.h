@@ -141,12 +141,7 @@ public:
     //
     // This call may only be made while the OpenGL ES context to which the
     // target texture belongs is bound to the calling thread.
-#ifndef QCOM_HARDWARE
-    status_t updateTexImage();
-#else
-    //
-    status_t updateTexImage(bool isComposition  = false);
-#endif
+    status_t updateTexImage(bool isComposition = false);
 
     // setBufferCountServer set the buffer count. If the client has requested
     // a buffer count using setBufferCount, the server-buffer count will
@@ -253,8 +248,6 @@ protected:
     // freeAllBuffersExceptHeadLocked frees the resources (both GraphicBuffer
     // and EGLImage) for all slots except the head of mQueue
     void freeAllBuffersExceptHeadLocked();
-
-    void freeAllBuffersExceptCurrentLocked();
 
     // drainQueueLocked drains the buffer queue if we're in synchronous mode
     // returns immediately otherwise. return NO_INIT if SurfaceTexture
@@ -513,7 +506,7 @@ private:
     // glCopyTexSubImage to read from the texture.  This is a hack to work
     // around a GL driver limitation on the number of FBO attachments, which the
     // browser's tile cache exceeds.
-#ifdef QCOM_HARDWARE
+#ifdef DECIDE_TEXTURE_TARGET
     GLenum mTexTarget;
 #else
     const GLenum mTexTarget;

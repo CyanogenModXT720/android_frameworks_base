@@ -42,7 +42,6 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES:= \
 	$(commonSources) \
-	Overlay.cpp \
 	EGLUtils.cpp \
 	FramebufferNativeWindow.cpp \
 	GraphicBuffer.cpp \
@@ -52,7 +51,8 @@ LOCAL_SRC_FILES:= \
 	InputTransport.cpp \
 	PixelFormat.cpp \
 	Rect.cpp \
-	Region.cpp
+	Region.cpp \
+        Overlay.cpp
 
 LOCAL_SHARED_LIBRARIES := \
 	libcutils \
@@ -63,10 +63,6 @@ LOCAL_SHARED_LIBRARIES := \
 	libhardware_legacy \
 	libskia \
 	libbinder
-
-ifdef BOARD_EGL_GRALLOC_USAGE_FILTER
-	LOCAL_CFLAGS += -DBOARD_EGL_GRALLOC_USAGE_FILTER=$(BOARD_EGL_GRALLOC_USAGE_FILTER)
-endif
 
 LOCAL_C_INCLUDES := \
     external/skia/include/core

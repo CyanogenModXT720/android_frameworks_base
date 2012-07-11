@@ -41,10 +41,10 @@
 
 #ifdef QCOM_HARDWARE
 #include <qcom_ui.h>
+#define SHIFT_SRC_TRANSFORM 4
 #endif
 
 #define DEBUG_RESIZE    0
-
 
 namespace android {
 
@@ -205,9 +205,13 @@ void Layer::setGeometry(hwc_layer_t* hwcl)
     // we can't do alpha-fade with the hwc HAL. C2D composition
     // can handle fade cases
     const State& s(drawingState());
-    if ((s.alpha < 0xFF) &&
-        !(DisplayHardware::C2D_COMPOSITION & hw.getFlags())) {
-        hwcl->flags = HWC_SKIP_LAYER;
+    if (s.alpha < 0xFF) {
+        if ((DisplayHardware::C2D_COMPOSITION & hw.getFlags()) && (!isOpaque())) {
+            hwcl->blending = mPremultipliedAlpha ?
+                HWC_BLENDING_PREMULT : HWC_BLENDING_COVERAGE;
+        } else {
+            hwcl->flags = HWC_SKIP_LAYER;
+        }
     }
 
     hwcl->alpha = s.alpha;
@@ -239,6 +243,12 @@ void Layer::setGeometry(hwc_layer_t* hwcl)
         hwcl->flags = HWC_SKIP_LAYER;
     } else {
         hwcl->transform = finalTransform;
+#ifdef QCOM_HARDWARE
+        //mBufferTransform will have the srcTransform
+        //include src and final transform in the hwcl->transform
+        hwcl->transform = (( bufferOrientation.getOrientation() <<
+                                       SHIFT_SRC_TRANSFORM) | hwcl->transform);
+#endif
     }
 
     if (isCropped()) {
@@ -317,11 +327,13 @@ void Layer::onDraw(const Region& clip) const
         return;
 	}
 
+#ifdef DECIDE_TEXTURE_TARGET
     GLuint currentTextureTarget = mSurfaceTexture->getCurrentTextureTarget();
+#endif
 #endif
 
     if (!isProtected()) {
-#ifdef QCOM_HARDWARE
+#ifdef DECIDE_TEXTURE_TARGET
         glBindTexture(currentTextureTarget, mTextureName);
 #else
         glBindTexture(GL_TEXTURE_EXTERNAL_OES, mTextureName);
@@ -331,7 +343,7 @@ void Layer::onDraw(const Region& clip) const
             // TODO: we could be more subtle with isFixedSize()
             filter = GL_LINEAR;
         }
-#ifdef QCOM_HARDWARE
+#ifdef DECIDE_TEXTURE_TARGET
         glTexParameterx(currentTextureTarget, GL_TEXTURE_MAG_FILTER, filter);
         glTexParameterx(currentTextureTarget, GL_TEXTURE_MIN_FILTER, filter);
 #else
@@ -342,13 +354,13 @@ void Layer::onDraw(const Region& clip) const
         glLoadMatrixf(mTextureMatrix);
         glMatrixMode(GL_MODELVIEW);
         glDisable(GL_TEXTURE_2D);
-#ifdef QCOM_HARDWARE
+#ifdef DECIDE_TEXTURE_TARGET
         glEnable(currentTextureTarget);
 #else
         glEnable(GL_TEXTURE_EXTERNAL_OES);
 #endif
     } else {
-#ifdef QCOM_HARDWARE
+#ifdef DECIDE_TEXTURE_TARGET
         glBindTexture(currentTextureTarget, mFlinger->getProtectedTexName());
 #else
         glBindTexture(GL_TEXTURE_2D, mFlinger->getProtectedTexName());
@@ -356,7 +368,7 @@ void Layer::onDraw(const Region& clip) const
         glMatrixMode(GL_TEXTURE);
         glLoadIdentity();
         glMatrixMode(GL_MODELVIEW);
-#ifdef QCOM_HARDWARE
+#ifdef DECIDE_TEXTURE_TARGET
         glEnable(currentTextureTarget);
 #else
         glDisable(GL_TEXTURE_EXTERNAL_OES);
@@ -365,6 +377,10 @@ void Layer::onDraw(const Region& clip) const
     }
 
 #ifdef QCOM_HARDWARE
+    if(needsDithering()) {
+        glEnable(GL_DITHER);
+    }
+
     int composeS3DFormat = mQCLayer->needsS3DCompose();
     if (composeS3DFormat)
         drawS3DUIWithOpenGL(clip);
@@ -376,6 +392,11 @@ void Layer::onDraw(const Region& clip) const
 
     glDisable(GL_TEXTURE_EXTERNAL_OES);
     glDisable(GL_TEXTURE_2D);
+#ifdef QCOM_HARDWARE
+    if(needsDithering()) {
+        glDisable(GL_DITHER);
+    }
+#endif
 }
 
 // As documented in libhardware header, formats in the range
@@ -484,7 +505,7 @@ void Layer::lockPageFlip(bool& recomputeVisibleRegions)
             mFlinger->signalEvent();
         }
 
-#ifdef QCOM_HARDWARE
+#ifdef DECIDE_TEXTURE_TARGET
         // While calling updateTexImage() from SurfaceFlinger, let it know
         // by passing an extra parameter
         // This will be true always.
@@ -657,11 +678,11 @@ uint32_t Layer::getEffectiveUsage(uint32_t usage) const
         // need a hardware-protected path to external video sink
         usage |= GraphicBuffer::USAGE_PROTECTED;
     }
-#ifdef MISSING_GRALLOC_BUFFERS
+//#ifdef MISSING_GRALLOC_BUFFERS
     usage |= GraphicBuffer::USAGE_HW_TEXTURE;
-#else
-    usage |= GraphicBuffer::USAGE_HW_COMPOSER;
-#endif
+//#else
+//    usage |= GraphicBuffer::USAGE_HW_COMPOSER;
+//#endif
     return usage;
 }
 

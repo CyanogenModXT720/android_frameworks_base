@@ -406,7 +406,11 @@ void AudioStream::decode(int tick)
         count = recv(mSocket, samples, sizeof(samples),
             MSG_TRUNC | MSG_DONTWAIT) >> 1;
     } else {
-        __attribute__((aligned(4))) uint8_t buffer[2048];
+        __attribute__((aligned(4))) union {
+            uint8_t buffer[2048];
+            uint16_t buffer16[2048/2];
+            uint32_t buffer32[2048/4];
+        };
         sockaddr_storage remote;
         socklen_t addrlen = sizeof(remote);
 
@@ -416,13 +420,13 @@ void AudioStream::decode(int tick)
         // Do we need to check SSRC, sequence, and timestamp? They are not
         // reliable but at least they can be used to identify duplicates?
         if (length < 12 || length > (int)sizeof(buffer) ||
-            (ntohl(*(uint32_t *)buffer) & 0xC07F0000) != mCodecMagic) {
+            (ntohl(*buffer32) & 0xC07F0000) != mCodecMagic) {
             LOGV("stream[%d] malformed packet", mSocket);
             return;
         }
         int offset = 12 + ((buffer[0] & 0x0F) << 2);
         if ((buffer[0] & 0x10) != 0) {
-            offset += 4 + (ntohs(*(uint16_t *)&buffer[offset + 2]) << 2);
+            offset += 4 + (ntohs(buffer16[(offset + 2)/2]) << 2);
         }
         if ((buffer[0] & 0x20) != 0) {
             length -= buffer[length - 1];
@@ -870,8 +874,11 @@ bool AudioGroup::DeviceThread::threadLoop()
         int16_t input[sampleCount];
         int toWrite = sampleCount;
         int toRead = (mode == MUTED) ? 0 : sampleCount;
+#ifdef QCOM_HARDWARE
+        int chances = 10000;
+#else
         int chances = 100;
-
+#endif
         while (--chances > 0 && (toWrite > 0 || toRead > 0)) {
             if (toWrite > 0) {
                 AudioTrack::Buffer buffer;
@@ -985,7 +992,11 @@ void add(JNIEnv *env, jobject thiz, jint mode,
     if (!group) {
         int mode = env->GetIntField(thiz, gMode);
         group = new AudioGroup;
+#ifdef QCOM_HARDWARE
+        if (!group->set(sampleRate, sampleCount) || !group->setMode(mode)) {
+#else
         if (!group->set(8000, 256) || !group->setMode(mode)) {
+#endif
             jniThrowException(env, "java/lang/IllegalStateException",
                 "cannot initialize audio group");
             goto error;

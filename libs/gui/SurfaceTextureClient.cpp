@@ -67,8 +67,8 @@ void SurfaceTextureClient::init() {
     mReqExtUsage = 0;
 #endif
     mTimestamp = NATIVE_WINDOW_TIMESTAMP_AUTO;
-    mDefaultWidth = 16;
-    mDefaultHeight = 8;
+    mDefaultWidth = 0;
+    mDefaultHeight = 0;
     mTransformHint = 0;
     mConnectedToCpu = false;
 }
@@ -276,8 +276,12 @@ int SurfaceTextureClient::query(int what, int* value) const {
                 *value = mDefaultHeight;
                 return NO_ERROR;
             case NATIVE_WINDOW_TRANSFORM_HINT:
+#ifdef QCOM_HARDWARE
+                return mSurfaceTexture->query(what, value);
+#else
                 *value = mTransformHint;
                 return NO_ERROR;
+#endif
         }
     }
     return mSurfaceTexture->query(what, value);
@@ -395,13 +399,29 @@ int SurfaceTextureClient::dispatchSetBuffersGeometry(va_list args) {
     if (err != 0) {
         return err;
     }
+#ifdef QCOM_HARDWARE
+    LOGV("Resetting the Buffer size to 0 after SET GEOMETRY");
+    err = performQcomOperation(NATIVE_WINDOW_SET_BUFFERS_SIZE, 0, 0, 0);
+    if (err != 0) {
+        return err;
+    }
+#endif
     return setBuffersFormat(f);
 }
 
 int SurfaceTextureClient::dispatchSetBuffersDimensions(va_list args) {
     int w = va_arg(args, int);
     int h = va_arg(args, int);
+#ifndef QCOM_HARDWARE
     return setBuffersDimensions(w, h);
+#else
+    int err = setBuffersDimensions(w, h);
+    if (err != 0) {
+        return err;
+    }
+    LOGV("Resetting the Buffer size to 0 after SET DIMENSIONS");
+    return performQcomOperation(NATIVE_WINDOW_SET_BUFFERS_SIZE, 0, 0, 0);
+#endif
 }
 
 int SurfaceTextureClient::dispatchSetBuffersFormat(va_list args) {

@@ -107,7 +107,7 @@ public class WifiStateMachine extends StateMachine {
 
     private static final String TAG = "WifiStateMachine";
     private static final String NETWORKTYPE = "WIFI";
-    private static final boolean DBG = false;
+    private static final boolean DBG = SystemProperties.getBoolean("wifi.debug", false);
 
     /* TODO: This is no more used with the hostapd code. Clean up */
     private String mSoftApIface;
@@ -135,6 +135,7 @@ public class WifiStateMachine extends StateMachine {
     private int mReconnectCount = 0;
     private boolean mIsScanMode = false;
     private boolean mScanResultIsPending = false;
+    private boolean mFirmwareReload;
 
     private boolean mBluetoothConnectionActive = false;
 
@@ -200,6 +201,8 @@ public class WifiStateMachine extends StateMachine {
     private static final int EVENTLOG_WIFI_STATE_CHANGED        = 50021;
     private static final int EVENTLOG_WIFI_EVENT_HANDLED        = 50022;
     private static final int EVENTLOG_SUPPLICANT_STATE_CHANGED  = 50023;
+
+    private static final int FORCE_STOPPED_STATE               = 999999;
 
     /* The base for wifi message types */
     static final int BASE = Protocol.BASE_WIFI;
@@ -584,6 +587,9 @@ public class WifiStateMachine extends StateMachine {
                 com.android.internal.R.integer.config_wifi_supplicant_scan_interval);
 
         mSoftApIface = SystemProperties.get("wifi.ap.interface", "wl0.1");
+
+        mFirmwareReload = mContext.getResources().getBoolean(
+                com.android.internal.R.bool.config_wifi_ap_firmware_reload);
 
         mContext.registerReceiver(
             new BroadcastReceiver() {
@@ -1143,6 +1149,7 @@ public class WifiStateMachine extends StateMachine {
             for (String regex : wifiRegexs) {
                 if (intf.matches(regex)) {
 
+                    log("Trying tethering on " + intf);
                     InterfaceConfiguration ifcg = null;
                     try {
                         ifcg = mNwService.getInterfaceConfig(intf);
@@ -1156,12 +1163,12 @@ public class WifiStateMachine extends StateMachine {
                         }
                     } catch (Exception e) {
                         loge("Error configuring interface " + intf + ", :" + e);
-                        return false;
+                        continue;
                     }
 
                     if(mCm.tether(intf) != ConnectivityManager.TETHER_ERROR_NO_ERROR) {
                         loge("Error tethering on " + intf);
-                        return false;
+                        continue;
                     }
                     mTetherInterfaceName = intf;
                     return true;
@@ -1770,14 +1777,19 @@ public class WifiStateMachine extends StateMachine {
         new Thread(new Runnable() {
             public void run() {
                 try {
+                    log("startAccessPoint wlan="+mInterfaceName+", softap="+mSoftApIface);
                     mNwService.startAccessPoint(config, mInterfaceName, mSoftApIface);
                 } catch (Exception e) {
                     loge("Exception in softap start " + e);
+                    // second try
                     try {
                         mNwService.stopAccessPoint(mInterfaceName);
+                    } catch (Exception e0) {}
+                    try {
+                        log("startAccessPoint wlan="+mInterfaceName+", softap="+mSoftApIface);
                         mNwService.startAccessPoint(config, mInterfaceName, mSoftApIface);
                     } catch (Exception e1) {
-                        loge("Exception in softap re-start " + e1);
+                        loge("Exception in second softap start " + e1);
                         sendMessage(CMD_START_AP_FAILURE);
                         return;
                     }
@@ -1870,6 +1882,8 @@ public class WifiStateMachine extends StateMachine {
                 case DhcpStateMachine.CMD_PRE_DHCP_ACTION:
                 case DhcpStateMachine.CMD_POST_DHCP_ACTION:
                 /* Handled by WifiApConfigStore */
+                case CMD_LOAD_DRIVER_SUCCESS:
+                case CMD_LOAD_DRIVER_FAILURE:
                 case CMD_SET_AP_CONFIG:
                 case CMD_SET_AP_CONFIG_COMPLETED:
                 case CMD_REQUEST_AP_CONFIG:
@@ -1890,7 +1904,8 @@ public class WifiStateMachine extends StateMachine {
                     deferMessage(message);
                     break;
                 default:
-                    loge("Error! unhandled message" + message);
+                    loge("Error! unhandled message 0x" + Integer.toHexString(message.what) +
+                         " - " + (message.what - BASE));
                     break;
             }
             return HANDLED;
@@ -2030,15 +2045,16 @@ public class WifiStateMachine extends StateMachine {
                     break;
                 case CMD_START_SUPPLICANT:
                     try {
-                        mNwService.wifiFirmwareReload(mInterfaceName, "STA");
+                        if (mFirmwareReload)
+                            mNwService.wifiFirmwareReload(mInterfaceName, "STA");
                     } catch (Exception e) {
                         loge("Failed to reload STA firmware " + e);
                         // continue
                     }
-                   try {
-                       //A runtime crash can leave the interface up and
-                       //this affects connectivity when supplicant starts up.
-                       //Ensure interface is down before a supplicant start.
+                    try {
+                        //A runtime crash can leave the interface up and
+                        //this affects connectivity when supplicant starts up.
+                        //Ensure interface is down before a supplicant start.
                         mNwService.setInterfaceDown(mInterfaceName);
                         //Set privacy extensions
                         mNwService.setInterfaceIpv6PrivacyExtensions(mInterfaceName, true);
@@ -2660,17 +2676,54 @@ public class WifiStateMachine extends StateMachine {
         public void enter() {
             if (DBG) log(getName() + "\n");
             EventLog.writeEvent(EVENTLOG_WIFI_STATE_CHANGED, getName());
+            sendMessageDelayed(FORCE_STOPPED_STATE, 2000);
         }
+
+        /* If the supplicant doesnt report the interface down event,
+         * The wifi stay in stopping state and wifi never resume...
+         * this add another gate to exit this Stopping State...
+         */
+        private void forceTransitionToStopped(SupplicantState state) {
+
+            loge("Supplicant did not report INTERFACE_DISABLED, forcing stopped state ! was " + state);
+
+            setWifiEnabled(false);
+
+            try {
+                mNwService.setInterfaceDown(mInterfaceName);
+            }
+            catch (Exception e) {}
+
+            setWifiState(WIFI_STATE_DISABLED);
+            exit();
+        }
+
         @Override
         public boolean processMessage(Message message) {
             if (DBG) log(getName() + message.toString() + "\n");
             switch(message.what) {
+                case FORCE_STOPPED_STATE:
+                    forceTransitionToStopped(SupplicantState.INTERFACE_DISABLED);
+                    break;
                 case WifiMonitor.SUPPLICANT_STATE_CHANGE_EVENT:
                     SupplicantState state = handleSupplicantStateChange(message);
+                    if (DBG) log("Supplicant state is "+state);
                     if (state == SupplicantState.INTERFACE_DISABLED) {
+                        if (DBG) log("Received INTERFACE_DISABLED message");
                         transitionTo(mDriverStoppedState);
                     }
+                    else if (state == SupplicantState.DISCONNECTED) {
+                        forceTransitionToStopped(state);
+                    }
                     break;
+
+                case CMD_ENABLE_ALL_NETWORKS:
+                    loge("ENABLE_ALL_NETWORKS command received in stopping state, restarting wifi");
+                    // send DRIVER_HUNG_EVENT to mDefaultState to disable/enable the wifi...
+                    transitionTo(mDefaultState);
+                    sendMessage(WifiMonitor.DRIVER_HUNG_EVENT);
+                    return HANDLED;
+
                     /* Queue driver commands */
                 case CMD_START_DRIVER:
                 case CMD_STOP_DRIVER:
@@ -2687,6 +2740,8 @@ public class WifiStateMachine extends StateMachine {
                     deferMessage(message);
                     break;
                 default:
+                    log(getName() + " message not handled 0x" + Integer.toHexString(message.what) +
+                         " - " + (message.what - BASE) + "\n");
                     return NOT_HANDLED;
             }
             EventLog.writeEvent(EVENTLOG_WIFI_EVENT_HANDLED, message.what);
@@ -3134,6 +3189,12 @@ public class WifiStateMachine extends StateMachine {
                      * and handle the rest of the events there
                      */
                     deferMessage(message);
+
+                    /* TI WLAN-specific */
+                    if (SystemProperties.getBoolean("wifi.hotspot.ti", false)) {
+                    //    handlePostDhcpSetup();
+                    }
+
                     handleNetworkDisconnect();
                     transitionTo(mDisconnectedState);
                     break;

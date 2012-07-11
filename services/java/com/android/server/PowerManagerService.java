@@ -69,6 +69,8 @@ import static android.provider.Settings.System.STAY_ON_WHILE_PLUGGED_IN;
 import static android.provider.Settings.System.WINDOW_ANIMATION_SCALE;
 import static android.provider.Settings.System.TRANSITION_ANIMATION_SCALE;
 
+import com.android.internal.app.ThemeUtils;
+
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -203,6 +205,7 @@ public class PowerManagerService extends IPowerManager.Stub
     private Intent mScreenOnIntent;
     private LightsService mLightsService;
     private Context mContext;
+    private Context mUiContext;
     private LightsService.Light mLcdLight;
     private LightsService.Light mButtonLight;
     private LightsService.Light mKeyboardLight;
@@ -515,10 +518,13 @@ public class PowerManagerService extends IPowerManager.Stub
                 // recalculate everything
                 setScreenOffTimeoutsLocked();
 
-                mElectronBeamAnimationOn = Settings.System.getInt(mContext.getContentResolver(),
-                        ELECTRON_BEAM_ANIMATION_ON, 0) != 0;
-                mElectronBeamAnimationOff = Settings.System.getInt(mContext.getContentResolver(),
-                        ELECTRON_BEAM_ANIMATION_OFF, 1) != 0;
+                //read user settings and device config to control animations availability
+                mElectronBeamAnimationOn = (Settings.System.getInt(mContext.getContentResolver(),
+                        ELECTRON_BEAM_ANIMATION_ON, 0) != 0) &&
+                        mContext.getResources().getInteger(com.android.internal.R.integer.config_screenOnAnimation) >= 0;
+                mElectronBeamAnimationOff = (Settings.System.getInt(mContext.getContentResolver(),
+                        ELECTRON_BEAM_ANIMATION_OFF, 1) != 0) &&
+                        mContext.getResources().getBoolean(com.android.internal.R.bool.config_screenOffAnimation);
 
                 mAnimationSetting = 0;
                 if (mElectronBeamAnimationOff) {
@@ -1020,8 +1026,11 @@ public class PowerManagerService extends IPowerManager.Stub
             if ((wl.flags & LOCK_MASK) == PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK) {
                 mProximityWakeLockCount--;
                 if (mProximityWakeLockCount == 0) {
+                    int buggyProximity = Settings.System.getInt(mContext.getContentResolver(),
+                                             Settings.System.INACCURATE_PROXIMITY_WORKAROUND, 0);
                     if (mProximitySensorActive &&
-                            ((flags & PowerManager.WAIT_FOR_PROXIMITY_NEGATIVE) != 0)) {
+                            ((flags & PowerManager.WAIT_FOR_PROXIMITY_NEGATIVE) != 0) &&
+                            (buggyProximity == 0)) {
                         // wait for proximity sensor to go negative before disabling sensor
                         if (mDebugProximitySensor) {
                             Slog.d(TAG, "waiting for proximity sensor to go negative");
@@ -1819,7 +1828,7 @@ public class PowerManagerService extends IPowerManager.Stub
             }
 
             if (!mBootCompleted && !mAutoBrightnessButtonKeyboard) {
-                newState |= ALL_BRIGHT;
+                newState |= (mKeyboardVisible ? ALL_BRIGHT : SCREEN_BUTTON_BRIGHT);
             }
 
             boolean oldScreenOn = (mPowerState & SCREEN_ON_BIT) != 0;
@@ -2186,10 +2195,17 @@ public class PowerManagerService extends IPowerManager.Stub
             mLastLcdValue = value;
         }
         if ((mask & BUTTON_BRIGHT_BIT) != 0) {
-            mButtonLight.setBrightness(value);
+            // Use sensor-determined brightness values when the button (or keyboard)
+            // light is on, since users may want to specify a custom brightness setting
+            // that disables the button (or keyboard) backlight entirely in low-ambient
+            // light situations.
+            mButtonLight.setBrightness(mLightSensorButtonBrightness >= 0 && value > 0 ?
+                                       mLightSensorButtonBrightness : value);
+
         }
         if ((mask & KEYBOARD_BRIGHT_BIT) != 0) {
-            mKeyboardLight.setBrightness(value);
+            mKeyboardLight.setBrightness(mLightSensorKeyboardBrightness >= 0 && value > 0 ?
+                                         mLightSensorKeyboardBrightness : value);
         }
     }
 
@@ -2201,6 +2217,8 @@ public class PowerManagerService extends IPowerManager.Stub
         float curValue;
         float delta;
         boolean animating;
+        Handler mElectronBeamOnHandler;
+        HandlerThread mElectronBeamOnHandlerThread;
 
         BrightnessState(int m) {
             mask = m;
@@ -2314,7 +2332,7 @@ public class PowerManagerService extends IPowerManager.Stub
                 final boolean electrifying =
                         ((mElectronBeamAnimationOff && turningOff) ||
                          (mElectronBeamAnimationOn && turningOn));
-                if (!electrifying && (mAnimateScreenLights && !turningOff)) {
+                if (!electrifying && (mAnimateScreenLights || !turningOff)) {
                     long now = SystemClock.uptimeMillis();
                     boolean more = mScreenBrightness.stepLocked();
                     if (more) {
@@ -2332,14 +2350,47 @@ public class PowerManagerService extends IPowerManager.Stub
                         mScreenBrightness.jumpToTargetLocked();
                     } else if (turningOn) {
                         if (electrifying) {
-                            jumpToTarget();
-                            nativeStartSurfaceFlingerOnAnimation(mAnimationSetting);
-                            animating = false;
+                            int delay=mContext.getResources().getInteger(com.android.internal.R.integer.config_screenOnAnimation);
+                            if(delay>0) {
+                                startElectronBeamDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        startElectronBeamOnAnimation();
+                                        synchronized(mElectronBeamOnHandler) {
+                                            mElectronBeamOnHandler.notifyAll();
+                                        }
+                                    }
+                                },delay);
+                            } else {
+                                startElectronBeamOnAnimation();
+                            }
                         } else {
                             mScreenBrightness.jumpToTargetLocked();
                         }
                     }
                 }
+            }
+        }
+
+        private void startElectronBeamOnAnimation() {
+            jumpToTarget();
+            nativeStartSurfaceFlingerOnAnimation(mAnimationSetting);
+            mScreenBrightness.animating = false;
+        }
+
+        private void startElectronBeamDelayed(Runnable animation, int delay) {
+            mElectronBeamOnHandlerThread = new HandlerThread("PowerManagerService.mScreenBrightness.mElectronBeamOnHandlerThread");
+            mElectronBeamOnHandlerThread.start();
+            mElectronBeamOnHandler = new Handler(mElectronBeamOnHandlerThread.getLooper());
+            mElectronBeamOnHandler.postDelayed(animation,delay);
+            try {
+                synchronized(mElectronBeamOnHandler) {
+                    mElectronBeamOnHandler.wait();
+                }
+            } catch (InterruptedException e) {
+                Slog.d(TAG,"mElectronBeamOnHandler.wait() interrupted");
+                Slog.d(TAG,Log.getStackTraceString(e));
+                e.printStackTrace();
             }
         }
     }
@@ -2387,7 +2438,11 @@ public class PowerManagerService extends IPowerManager.Stub
             // do not override brightness if the battery is low
             return state;
         }
-        if (!mKeyboardVisible) {
+        // Ignore mKeyboardVisible if KEYBOARD_BRIGHT_BIT is explicitly set, which
+        // it will only if the keyboard is visible at the time mPowerState is set.
+        // Otherwise, if mKeyboardVisible changes afterwards, it's possible for
+        // the backlight to mismatch mPowerState and remain off.
+        if (!mKeyboardVisible && (state & KEYBOARD_BRIGHT_BIT) == 0) {
             brightness = 0;
         } else if (mButtonBrightnessOverride >= 0) {
             brightness = mButtonBrightnessOverride;
@@ -2782,14 +2837,10 @@ public class PowerManagerService extends IPowerManager.Stub
                 int buttonValue = getAutoBrightnessValue(value, mLastButtonValue,
                         (mCustomLightEnabled ? mCustomLightLevels : mAutoBrightnessLevels),
                         (mCustomLightEnabled ? mCustomButtonValues : mButtonBacklightValues));
-                int keyboardValue;
-                if (mKeyboardVisible) {
-                    keyboardValue = getAutoBrightnessValue(value, mLastKeyboardValue,
+                int keyboardValue = getAutoBrightnessValue(value, mLastKeyboardValue,
                             (mCustomLightEnabled ? mCustomLightLevels : mAutoBrightnessLevels),
                             (mCustomLightEnabled ? mCustomKeyboardValues : mKeyboardBacklightValues));
-                } else {
-                    keyboardValue = 0;
-                }
+
                 mLightSensorScreenBrightness = lcdValue;
                 mLightSensorButtonBrightness = buttonValue;
                 mLightSensorKeyboardBrightness = keyboardValue;
@@ -2807,10 +2858,10 @@ public class PowerManagerService extends IPowerManager.Stub
                     }
                     mLastLcdValue = value;
                 }
-                if (mButtonBrightnessOverride < 0) {
+                if (mButtonBrightnessOverride < 0 && mAutoBrightnessButtonKeyboard) {
                     mButtonLight.setBrightness(buttonValue);
                 }
-                if (mButtonBrightnessOverride < 0 || !mKeyboardVisible) {
+                if ((mButtonBrightnessOverride < 0 || !mKeyboardVisible) && mAutoBrightnessButtonKeyboard) {
                     mKeyboardLight.setBrightness(keyboardValue);
                 }
             }
@@ -2854,7 +2905,7 @@ public class PowerManagerService extends IPowerManager.Stub
         Runnable runnable = new Runnable() {
             public void run() {
                 synchronized (this) {
-                    ShutdownThread.reboot(mContext, finalReason, false);
+                    ShutdownThread.reboot(getUiContext(), finalReason, false);
                 }
                 
             }
@@ -2889,6 +2940,13 @@ public class PowerManagerService extends IPowerManager.Stub
         } catch (InterruptedException e) {
             Log.wtf(TAG, e);
         }
+    }
+
+    private Context getUiContext() {
+        if (mUiContext == null) {
+            mUiContext = ThemeUtils.createUiContext(mContext);
+        }
+        return mUiContext != null ? mUiContext : mContext;
     }
 
     private void goToSleepLocked(long time, int reason) {
@@ -3285,7 +3343,7 @@ public class PowerManagerService extends IPowerManager.Stub
             setPowerState(SCREEN_BRIGHT);
         } else {
             // turn everything on
-            setPowerState(ALL_BRIGHT);
+            setPowerState(mKeyboardVisible ? ALL_BRIGHT : SCREEN_BUTTON_BRIGHT);
         }
 
         synchronized (mLocks) {

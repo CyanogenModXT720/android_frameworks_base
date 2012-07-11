@@ -576,9 +576,13 @@ public class NetworkManagementService extends INetworkManagementService.Stub
         try {
             rsp = mConnector.doCommand(cmd.toString());
         } catch (NativeDaemonConnectorException e) {
-            throw new IllegalStateException(
-                    "Unable to communicate with native dameon to add routes - "
+            if (action != REMOVE) {
+                throw new IllegalStateException(
+                    "Unable to communicate with native daemon to add routes - "
                     + e);
+            } else {
+                Log.w(TAG, "Unable to remove route on interface " + interfaceName);
+            }
         }
 
         if (DBG) {
@@ -1042,8 +1046,9 @@ public class NetworkManagementService extends INetworkManagementService.Stub
         mContext.enforceCallingOrSelfPermission(
                 android.Manifest.permission.CHANGE_WIFI_STATE, "NetworkManagementService");
         try {
+            String softApIface = SystemProperties.get("wifi.ap.interface", wlanIface);
             mConnector.doCommand("softap stopap");
-            mConnector.doCommand("softap stop " + wlanIface);
+            mConnector.doCommand("softap stop " + softApIface);
             wifiFirmwareReload(wlanIface, "STA");
         } catch (NativeDaemonConnectorException e) {
             throw new IllegalStateException("Error communicating to native daemon to stop soft AP",

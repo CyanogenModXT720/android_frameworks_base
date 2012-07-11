@@ -61,7 +61,7 @@ Overlay::Format Overlay::getFormatFromString(const char* name)
     } else if (strcmp(name, "rgba8888") == 0) {
         return FORMAT_RGBA8888;
     }
-
+    LOGW("%s: unhandled color format %s", __FUNCTION__, name);
     return FORMAT_UNKNOWN;
 }
 
@@ -181,7 +181,7 @@ status_t Overlay::queueBuffer(overlay_buffer_t buffer)
 
     pthread_mutex_unlock(&mQueueMutex);
 
-    return mStatus; 
+    return mStatus;
 }
 
 status_t Overlay::resizeInput(uint32_t width, uint32_t height)
