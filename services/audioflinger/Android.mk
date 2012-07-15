@@ -44,6 +44,10 @@ ifeq ($(ARCH_ARM_HAVE_NEON),true)
    LOCAL_CFLAGS += -D__ARM_HAVE_NEON
 endif
 
+ifeq ($(BOARD_HAS_SAMSUNG_VOLUME_BUG),true)
+   LOCAL_CFLAGS += -DHAS_SAMSUNG_VOLUME_BUG
+endif
+
 ifeq ($(ARCH_ARM_HAVE_NEON),true)
    LOCAL_CFLAGS += -D__ARM_HAVE_NEON
 endif
