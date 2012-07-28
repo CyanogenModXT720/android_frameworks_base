@@ -44,6 +44,7 @@ import java.util.Collections;
  * Samsung CDMA RIL doesn't send CDMA NV in RIUM infomation format which causes the CDMA RIL stack to crash and end up not being provisioned.
  * Samsung put CDMA NV in GSM format. I forced the RIL stack to process CDMA NV request as a GSM SIM in CDMA mode.
  * Custom Qualcomm No SimReady RIL using the latest Uicc stack
+ * Check for CDMA phone on RADIO_ON* event and if so set status to RUIM_NOT_READY to trigger CSIM/RUIM processing
  *
  * {@hide}
  */
@@ -90,16 +91,16 @@ public class SamsungCDMAQualcommRIL extends QualcommSharedRIL implements Command
             ca.pin1_replaced = p.readInt();
             ca.pin1 = ca.PinStateFromRILInt(p.readInt());
             ca.pin2 = ca.PinStateFromRILInt(p.readInt());
-            p.readInt(); //remaining_count_pin1
-            p.readInt(); //remaining_count_puk1
-            p.readInt(); //remaining_count_pin2
-            p.readInt(); //remaining_count_puk2
+            p.readInt(); //remaining_count_pin1   - pin1_num_retries
+            p.readInt(); //remaining_count_puk1   - puk1_num_retries
+            p.readInt(); //remaining_count_pin2   - pin2_num_retries
+            p.readInt(); //remaining_count_puk2   - puk2_num_retries
+            p.readInt(); //                       - perso_unblock_retries
             status.addApplication(ca);
         }
         int appIndex = -1;
         appIndex = status.getGsmUmtsSubscriptionAppIndex();
         Log.d(LOG_TAG, "This is a CDMA PHONE " + appIndex);
-
 
         if (numApplications > 0) {
             IccCardApplication application = status.getApplication(appIndex);
@@ -116,7 +117,8 @@ public class SamsungCDMAQualcommRIL extends QualcommSharedRIL implements Command
         return status;
     }
 
-    private void setRadioStateFromRILInt (int stateCode) {
+    @Override
+    protected void setRadioStateFromRILInt (int stateCode) {
         CommandsInterface.RadioState radioState;
         HandlerThread handlerThread;
         Looper looper;
@@ -146,8 +148,12 @@ public class SamsungCDMAQualcommRIL extends QualcommSharedRIL implements Command
                     mIccHandler = new IccHandler(this,looper);
                     mIccHandler.run();
                 }
-                radioState = CommandsInterface.RadioState.SIM_NOT_READY;
 
+                if (mPhoneType == RILConstants.CDMA_PHONE) {
+                    radioState = CommandsInterface.RadioState.RUIM_NOT_READY;
+                } else {
+                    radioState = CommandsInterface.RadioState.SIM_NOT_READY;
+                }
                 setRadioState(radioState);
                 break;
             default:
@@ -156,6 +162,7 @@ public class SamsungCDMAQualcommRIL extends QualcommSharedRIL implements Command
 
         setRadioState (radioState);
     }
+
     @Override
     protected Object
     responseSignalStrength(Parcel p) {
