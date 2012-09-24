@@ -1159,8 +1159,21 @@ status_t OMXCodec::configureCodec(const sp<MetaData> &meta, uint32_t flags) {
         #else
         #  define MAX_ENCODER_RESOLUTION MAX_RESOLUTION
         #endif
+    #define MAX_ENCODER_RESOLUTION 848*480
+    if (!strcmp(mComponentName, "OMX.TI.Video.encoder")) {
+	    int32_t width, height;
+        bool				 success = meta->findInt32(kKeyWidth, &width);
+        success		 = success && meta->findInt32(kKeyHeight, &height);
+        CHECK(success);
+        if (width*height > MAX_ENCODER_RESOLUTION) {
+            ALOGE("Format exceed the encoder's capabilities. %d", width*height);
+            // require OMX.TI.720P.Encoder
+            return ERROR_UNSUPPORTED;
+        }
+   }		
 
-        if (!strcmp(mComponentName, "OMX.TI.Video.encoder")) {
+        if (!strcmp(mComponentName, "OMX.TI.Video.encoder") ||
+			!strcmp("OMX.TI.720P.Encoder", mComponentName)) 
             int32_t width, height;
             bool success = meta->findInt32(kKeyWidth, &width);
             success = success && meta->findInt32(kKeyHeight, &height);
